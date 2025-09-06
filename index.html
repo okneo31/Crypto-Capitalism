@@ -709,6 +709,13 @@
                     <div class="balance-label">총 자산</div>
                     <div class="balance-value" id="totalAssets">0</div>
                 </div>
+                <div class="balance-item">
+                    <div class="balance-label">신용등급</div>
+                    <div class="balance-value" id="creditGrade" style="font-size: 1.5rem;">-</div>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">
+                        점수: <span id="creditScore">-</span>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -779,6 +786,63 @@
                     <div class="content-header">
                         <h2 class="content-title">은행 관리</h2>
                         <p class="content-subtitle">대출 승인, 금리 설정</p>
+                    </div>
+                    
+                    <!-- 은행 금리 설정 -->
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-card">
+                            <div class="stat-label">기준 금리</div>
+                            <div class="stat-value" id="baseRate">5.0%</div>
+                            <div class="action-grid" style="margin-top: 10px; grid-template-columns: repeat(4, 1fr);">
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('base', -1)">-1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('base', -0.1)">-0.1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('base', 0.1)">+0.1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('base', 1)">+1%</button>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">대출 금리</div>
+                            <div class="stat-value" id="loanRate">8.0%</div>
+                            <div class="action-grid" style="margin-top: 10px; grid-template-columns: repeat(4, 1fr);">
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('loan', -1)">-1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('loan', -0.1)">-0.1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('loan', 0.1)">+0.1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('loan', 1)">+1%</button>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">예금 금리</div>
+                            <div class="stat-value" id="depositRate">3.0%</div>
+                            <div class="action-grid" style="margin-top: 10px; grid-template-columns: repeat(4, 1fr);">
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('deposit', -1)">-1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('deposit', -0.1)">-0.1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('deposit', 0.1)">+0.1%</button>
+                                <button class="action-btn" style="padding: 10px; font-size: 0.8rem;" onclick="adjustRate('deposit', 1)">+1%</button>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">은행 자산</div>
+                            <div class="stat-value" id="bankAssets">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 은행 정책 설정 -->
+                    <div style="background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 20px; margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 20px;">은행 정책</h3>
+                        <div class="action-grid">
+                            <button class="action-btn" onclick="setBankPolicy('conservative')">
+                                🛡️ 보수적 정책
+                                <div style="font-size: 0.8rem; margin-top: 5px;">낮은 위험, 낮은 수익</div>
+                            </button>
+                            <button class="action-btn" onclick="setBankPolicy('balanced')">
+                                ⚖️ 균형 정책
+                                <div style="font-size: 0.8rem; margin-top: 5px;">중간 위험, 중간 수익</div>
+                            </button>
+                            <button class="action-btn" onclick="setBankPolicy('aggressive')">
+                                🚀 공격적 정책
+                                <div style="font-size: 0.8rem; margin-top: 5px;">높은 위험, 높은 수익</div>
+                            </button>
+                        </div>
                     </div>
                     
                     <h3 style="margin-top: 30px; margin-bottom: 20px;">대출 신청 목록</h3>
@@ -853,7 +917,1001 @@
     </div>
 
     <script>
-        // Supabase 변수
+        // 게임 화면 표시
+        function showGame() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('roleSelection').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            
+            // UI 업데이트
+            document.getElementById('userAvatar').textContent = gameState.currentUser.username[0].toUpperCase();
+            document.getElementById('userName').textContent = gameState.currentUser.username;
+            
+            const roleNames = {
+                'banker': '은행장',
+                'entrepreneur': '사업가',
+                'investor': '투자자',
+                'worker': '직장인'
+            };
+            document.getElementById('userRole').textContent = roleNames[gameState.currentUser.role] || '시민';
+            
+            // 은행장 메뉴 표시 및 초기 설정
+            if (gameState.currentUser.role === 'banker') {
+                document.getElementById('bankMenu').style.display = 'block';
+                loadBankSettings();
+            }
+            
+            updateDisplay();
+            
+            // 실시간 업데이트 시작
+            if (!gameState.isDemo) {
+                setupRealtimeSubscriptions();
+                startAutoUpdate();
+            }
+            
+            showNotification(`환영합니다, ${gameState.currentUser.username}님!`, 'success');
+        }
+        
+        // 은행 설정 로드
+        async function loadBankSettings() {
+            if (gameState.isDemo) {
+                updateBankDisplay();
+                return;
+            }
+            
+            // Supabase에서 은행 설정 로드
+            const { data } = await supabaseClient
+                .from('bank_settings')
+                .select('*')
+                .single();
+            
+            if (data) {
+                gameState.bankSettings = data;
+            }
+            
+            updateBankDisplay();
+        }
+        
+        // 은행 화면 업데이트
+        function updateBankDisplay() {
+            document.getElementById('baseRate').textContent = gameState.bankSettings.baseRate.toFixed(1) + '%';
+            document.getElementById('loanRate').textContent = gameState.bankSettings.loanRate.toFixed(1) + '%';
+            document.getElementById('depositRate').textContent = gameState.bankSettings.depositRate.toFixed(1) + '%';
+            document.getElementById('bankAssets').textContent = gameState.bankSettings.bankAssets.toLocaleString();
+        }
+        
+        // 금리 조정 (0.1% 단위 지원)
+        async function adjustRate(type, change) {
+            if (gameState.currentUser.role !== 'banker') {
+                showNotification('은행장만 금리를 조정할 수 있습니다', 'error');
+                return;
+            }
+            
+            switch(type) {
+                case 'base':
+                    gameState.bankSettings.baseRate = Math.round((gameState.bankSettings.baseRate + change) * 10) / 10;
+                    gameState.bankSettings.baseRate = Math.max(0, Math.min(20, gameState.bankSettings.baseRate));
+                    // 기준금리 변경시 다른 금리도 연동 (미세조정)
+                    if (change > 0.5 || change < -0.5) { // 큰 변화일 때만 연동
+                        gameState.bankSettings.loanRate = Math.max(gameState.bankSettings.baseRate + 1, gameState.bankSettings.loanRate);
+                        gameState.bankSettings.depositRate = Math.min(gameState.bankSettings.baseRate - 1, gameState.bankSettings.depositRate);
+                    }
+                    break;
+                case 'loan':
+                    gameState.bankSettings.loanRate = Math.round((gameState.bankSettings.loanRate + change) * 10) / 10;
+                    gameState.bankSettings.loanRate = Math.max(gameState.bankSettings.baseRate, Math.min(30, gameState.bankSettings.loanRate));
+                    break;
+                case 'deposit':
+                    gameState.bankSettings.depositRate = Math.round((gameState.bankSettings.depositRate + change) * 10) / 10;
+                    gameState.bankSettings.depositRate = Math.max(0, Math.min(gameState.bankSettings.baseRate, gameState.bankSettings.depositRate));
+                    break;
+            }
+            
+            if (!gameState.isDemo && supabaseClient) {
+                // Supabase에 저장
+                await supabaseClient
+                    .from('bank_settings')
+                    .upsert({
+                        id: 1,
+                        base_rate: gameState.bankSettings.baseRate,
+                        loan_rate: gameState.bankSettings.loanRate,
+                        deposit_rate: gameState.bankSettings.depositRate,
+                        updated_by: gameState.currentUser.id,
+                        updated_at: new Date()
+                    });
+                
+                // 모든 사용자에게 알림
+                await supabaseClient
+                    .from('notifications')
+                    .insert({
+                        type: 'rate_change',
+                        message: `금리가 변경되었습니다. 대출: ${gameState.bankSettings.loanRate.toFixed(1)}%, 예금: ${gameState.bankSettings.depositRate.toFixed(1)}%`,
+                        created_at: new Date()
+                    });
+            }
+            
+            updateBankDisplay();
+            showNotification(`금리가 ${change > 0 ? '인상' : '인하'}되었습니다 (${change > 0 ? '+' : ''}${change}%)`, 'success');
+        }
+        
+        // 은행 정책 설정
+        async function setBankPolicy(policy) {
+            if (gameState.currentUser.role !== 'banker') {
+                showNotification('은행장만 정책을 변경할 수 있습니다', 'error');
+                return;
+            }
+            
+            gameState.bankSettings.policy = policy;
+            
+            // 정책에 따른 자동 금리 조정
+            switch(policy) {
+                case 'conservative':
+                    gameState.bankSettings.baseRate = 3.0;
+                    gameState.bankSettings.loanRate = 5.0;
+                    gameState.bankSettings.depositRate = 2.0;
+                    showNotification('보수적 정책: 낮은 금리, 안정적 운영', 'info');
+                    break;
+                case 'balanced':
+                    gameState.bankSettings.baseRate = 5.0;
+                    gameState.bankSettings.loanRate = 8.0;
+                    gameState.bankSettings.depositRate = 3.0;
+                    showNotification('균형 정책: 적정 금리, 균형 성장', 'info');
+                    break;
+                case 'aggressive':
+                    gameState.bankSettings.baseRate = 8.0;
+                    gameState.bankSettings.loanRate = 12.0;
+                    gameState.bankSettings.depositRate = 5.0;
+                    showNotification('공격적 정책: 높은 금리, 빠른 성장', 'info');
+                    break;
+            }
+            
+            if (!gameState.isDemo && supabaseClient) {
+                await supabaseClient
+                    .from('bank_settings')
+                    .upsert({
+                        id: 1,
+                        base_rate: gameState.bankSettings.baseRate,
+                        loan_rate: gameState.bankSettings.loanRate,
+                        deposit_rate: gameState.bankSettings.depositRate,
+                        policy: policy,
+                        updated_by: gameState.currentUser.id,
+                        updated_at: new Date()
+                    });
+            }
+            
+            updateBankDisplay();
+        }
+        
+        // 사업 시작
+        async function startBusiness() {
+            if (gameState.currentUser.game_balance < 10000) {
+                showNotification('사업 시작에는 최소 10,000 코인이 필요합니다', 'error');
+                return;
+            }
+            
+            const businessTypes = ['카페', '편의점', '온라인 쇼핑몰', '음식점', 'IT 스타트업'];
+            const businessType = businessTypes[Math.floor(Math.random() * businessTypes.length)];
+            
+            if (gameState.isDemo) {
+                // 데모 모드
+                gameState.currentUser.game_balance -= 10000;
+                showNotification(`${businessType} 사업을 시작했습니다!`, 'success');
+                updateDisplay();
+            } else {
+                // Supabase RPC 호출
+                const { data, error } = await supabaseClient
+                    .rpc('start_business', {
+                        p_user_id: gameState.currentUser.id,
+                        p_business_type: businessType,
+                        p_investment: 10000
+                    });
+                
+                if (error) {
+                    showNotification(`사업 시작 실패: ${error.message}`, 'error');
+                    return;
+                }
+                
+                gameState.currentUser.game_balance -= 10000;
+                showNotification(`${businessType} 사업을 시작했습니다!`, 'success');
+                updateDisplay();
+                loadMyBusinesses();
+            }
+        }
+        
+        // 대출 신청
+        async function applyLoan() {
+            const creditScore = calculateCreditScore(gameState.currentUser);
+            const maxLoan = calculateLoanLimit(creditScore, gameState.currentUser.game_balance);
+            const creditGrade = getCreditGrade(creditScore);
+            
+            const loanAmount = prompt(`대출 신청 (최대 ${maxLoan.toLocaleString()} 코인)\n` +
+                                    `현재 신용등급: ${creditGrade.grade} (${creditScore}점) - ${creditGrade.description}\n` +
+                                    `대출 금액을 입력하세요:`);
+            if (!loanAmount || isNaN(loanAmount)) return;
+            
+            const amount = parseInt(loanAmount);
+            if (amount > maxLoan) {
+                showNotification(`신용등급 ${creditGrade.grade}의 최대 대출 한도는 ${maxLoan.toLocaleString()} 코인입니다`, 'error');
+                return;
+            }
+            
+            // 대출 기간 선택
+            const termInput = prompt(`대출 기간을 선택하세요:\n` +
+                                    `1) 1개월 (금리 -0.5%)\n` +
+                                    `2) 3개월 (기준금리)\n` +
+                                    `3) 6개월 (금리 +0.3%)\n` +
+                                    `4) 12개월 (금리 +0.8%)\n` +
+                                    `5) 36개월 (금리 +1.5%)\n` +
+                                    `번호를 입력하세요 (1-5):`);
+            
+            let loanTerm;
+            switch(termInput) {
+                case '1': loanTerm = 1; break;
+                case '2': loanTerm = 3; break;
+                case '3': loanTerm = 6; break;
+                case '4': loanTerm = 12; break;
+                case '5': loanTerm = 36; break;
+                default:
+                    showNotification('올바른 기간을 선택해주세요', 'error');
+                    return;
+            }
+            
+            // 상환 방식 선택
+            const repaymentInput = prompt(`상환 방식을 선택하세요:\n` +
+                                        `1) 원리금균등 - 매달 같은 금액 상환\n` +
+                                        `2) 원금균등 - 원금 균등 분할, 이자는 감소\n` +
+                                        `번호를 입력하세요 (1-2):`);
+            
+            let repaymentType;
+            switch(repaymentInput) {
+                case '1': repaymentType = 'equal'; break;
+                case '2': repaymentType = 'principal'; break;
+                default:
+                    showNotification('올바른 상환 방식을 선택해주세요', 'error');
+                    return;
+            }
+            
+            // 자동 심사 선택 (A+ 이상만 가능)
+            let autoApproval = false;
+            let autoApprovalAdjustment = 0;
+            if (creditScore >= 700) { // A+ 이상
+                const autoInput = prompt(`자동 심사를 신청하시겠습니까?\n` +
+                                        `✓ A+ 이상 등급만 가능\n` +
+                                        `✓ 즉시 승인되지만 금리 +0.2% 추가\n` +
+                                        `✓ 은행장 심사 대기 없음\n\n` +
+                                        `1) 자동 심사 신청 (금리 +0.2%)\n` +
+                                        `2) 일반 심사 신청 (은행장 승인 필요)\n` +
+                                        `번호를 입력하세요 (1-2):`);
+                
+                if (autoInput === '1') {
+                    autoApproval = true;
+                    autoApprovalAdjustment = 0.2;
+                }
+            }
+            
+            const purpose = prompt('대출 목적을 입력하세요:', '사업자금');
+            
+            // 신용점수, 기간, 자동심사에 따른 금리 조정
+            const creditAdjustment = calculateInterestRate(creditScore, gameState.bankSettings.loanRate) - gameState.bankSettings.loanRate;
+            const termAdjustment = calculateTermAdjustment(loanTerm);
+            const finalRate = gameState.bankSettings.loanRate + creditAdjustment + termAdjustment + autoApprovalAdjustment;
+            
+            // 상환 계산
+            const totalInterest = calculateTotalInterest(amount, finalRate, loanTerm, repaymentType);
+            
+            let confirmMsg = `대출 조건 확인\n` +
+                            `━━━━━━━━━━━━━━━━━\n` +
+                            `대출금: ${amount.toLocaleString()} 코인\n` +
+                            `기간: ${loanTerm}개월\n` +
+                            `금리: ${finalRate.toFixed(1)}%\n` +
+                            `  ㄴ 기준: ${gameState.bankSettings.loanRate}%\n` +
+                            `  ㄴ 신용: ${creditAdjustment > 0 ? '+' : ''}${creditAdjustment.toFixed(1)}%\n` +
+                            `  ㄴ 기간: ${termAdjustment > 0 ? '+' : ''}${termAdjustment}%\n`;
+            
+            if (autoApproval) {
+                confirmMsg += `  ㄴ 자동심사: +${autoApprovalAdjustment}%\n`;
+            }
+            
+            confirmMsg += `상환방식: ${repaymentType === 'equal' ? '원리금균등' : '원금균등'}\n`;
+            confirmMsg += `심사방식: ${autoApproval ? '⚡ 자동심사 (즉시승인)' : '👤 일반심사 (은행장 승인)'}\n`;
+            
+            if (repaymentType === 'equal') {
+                const monthlyPayment = calculateMonthlyPayment(amount, finalRate, loanTerm);
+                confirmMsg += `월 상환금: ${monthlyPayment.toLocaleString()} 코인 (고정)\n`;
+            } else {
+                const firstPayment = calculatePrincipalPayment(amount, finalRate, loanTerm, 1);
+                const lastPayment = calculatePrincipalPayment(amount, finalRate, loanTerm, loanTerm);
+                confirmMsg += `첫달 상환금: ${firstPayment.toLocaleString()} 코인\n`;
+                confirmMsg += `마지막달 상환금: ${lastPayment.toLocaleString()} 코인\n`;
+            }
+            
+            confirmMsg += `총 이자: ${totalInterest.toLocaleString()} 코인\n` +
+                         `총 상환금: ${(amount + totalInterest).toLocaleString()} 코인\n` +
+                         `━━━━━━━━━━━━━━━━━\n` +
+                         `진행하시겠습니까? (확인/취소)`;
+            
+            if (!confirm(confirmMsg)) return;
+            
+            if (gameState.isDemo) {
+                // 데모 모드
+                gameState.currentUser.game_balance += amount;
+                const paymentInfo = repaymentType === 'equal' ? 
+                    `월 ${calculateMonthlyPayment(amount, finalRate, loanTerm).toLocaleString()} 코인 고정` :
+                    `첫달 ${calculatePrincipalPayment(amount, finalRate, loanTerm, 1).toLocaleString()} 코인부터 감소`;
+                
+                if (autoApproval) {
+                    showNotification(`🎉 자동심사 즉시 승인!\n${loanTerm}개월 ${repaymentType === 'equal' ? '원리금균등' : '원금균등'}\n${paymentInfo}`, 'success');
+                } else {
+                    showNotification(`대출 승인!\n${loanTerm}개월 ${repaymentType === 'equal' ? '원리금균등' : '원금균등'}\n${paymentInfo}`, 'success');
+                }
+                updateDisplay();
+            } else {
+                // Supabase RPC 호출
+                const { data, error } = await supabaseClient
+                    .rpc('apply_for_loan', {
+                        p_user_id: gameState.currentUser.id,
+                        p_amount: amount,
+                        p_purpose: purpose || '사업자금',
+                        p_interest_rate: finalRate,
+                        p_credit_score: creditScore,
+                        p_loan_term: loanTerm,
+                        p_repayment_type: repaymentType,
+                        p_auto_approval: autoApproval,
+                        p_status: autoApproval ? 'approved' : 'pending',
+                        p_monthly_payment: repaymentType === 'equal' ? 
+                            calculateMonthlyPayment(amount, finalRate, loanTerm) : null
+                    });
+                
+                if (error) {
+                    showNotification(`대출 신청 실패: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (autoApproval) {
+                    // 자동 승인된 경우 즉시 잔액 증가
+                    gameState.currentUser.game_balance += amount;
+                    updateDisplay();
+                    showNotification(`🎉 자동심사 즉시 승인! ${amount.toLocaleString()} 코인이 입금되었습니다.`, 'success');
+                } else {
+                    showNotification('대출 신청이 접수되었습니다. 은행장의 승인을 기다려주세요.', 'info');
+                }
+                loadMyLoans();
+            }
+        }
+        
+        // 대출 승인 (은행장용)
+        async function approveLoan(loanId, amount) {
+            if (gameState.currentUser.role !== 'banker') {
+                showNotification('은행장만 대출을 승인할 수 있습니다', 'error');
+                return;
+            }
+            
+            // 은행 자산 확인
+            if (gameState.bankSettings.bankAssets < amount) {
+                showNotification('은행 자산이 부족합니다', 'error');
+                return;
+            }
+            
+            if (gameState.isDemo) {
+                gameState.bankSettings.bankAssets -= amount;
+                updateBankDisplay();
+                showNotification('대출이 승인되었습니다', 'success');
+            } else {
+                const { data, error } = await supabaseClient
+                    .rpc('approve_loan', {
+                        p_loan_id: loanId,
+                        p_banker_id: gameState.currentUser.id,
+                        p_interest_rate: gameState.bankSettings.loanRate
+                    });
+                
+                if (error) {
+                    showNotification(`대출 승인 실패: ${error.message}`, 'error');
+                    return;
+                }
+                
+                gameState.bankSettings.bankAssets -= amount;
+                updateBankDisplay();
+                showNotification('대출이 승인되었습니다', 'success');
+                loadLoanApplications();
+            }
+        }
+        
+        // 대출 거절 (은행장용)
+        async function rejectLoan(loanId) {
+            if (gameState.currentUser.role !== 'banker') {
+                showNotification('은행장만 대출을 거절할 수 있습니다', 'error');
+                return;
+            }
+            
+            if (!gameState.isDemo && supabaseClient) {
+                const { error } = await supabaseClient
+                    .from('loans')
+                    .update({ status: 'rejected' })
+                    .eq('id', loanId);
+                
+                if (error) {
+                    showNotification('대출 거절 실패', 'error');
+                    return;
+                }
+            }
+            
+            showNotification('대출이 거절되었습니다', 'info');
+            loadLoanApplications();
+        }
+        
+        // 내 사업 목록 로드
+        async function loadMyBusinesses() {
+            if (gameState.isDemo) return;
+            
+            const { data } = await supabaseClient
+                .from('businesses')
+                .select('*')
+                .eq('owner_id', gameState.currentUser.id);
+            
+            const container = document.getElementById('myBusinesses');
+            container.innerHTML = '';
+            
+            if (data && data.length > 0) {
+                data.forEach(business => {
+                    const card = document.createElement('div');
+                    card.className = 'business-card';
+                    card.innerHTML = `
+                        <div class="business-header">
+                            <span class="business-name">${business.name}</span>
+                            <span class="business-profit">월 수익: ${business.monthly_revenue}</span>
+                        </div>
+                        <p>투자금: ${business.investment}</p>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p>아직 사업이 없습니다</p>';
+            }
+        }
+        
+        // 대출 신청 목록 로드 (은행장용)
+        async function loadLoanApplications() {
+            if (gameState.isDemo) {
+                // 데모 데이터
+                const demoLoans = [
+                    { 
+                        id: 1, 
+                        username: 'TestUser1', 
+                        amount: 10000,
+                        loan_term: 6,
+                        purpose: '사업자금',
+                        user: {
+                            game_balance: 15000,
+                            role: 'entrepreneur',
+                            business_count: 1
+                        }
+                    },
+                    { 
+                        id: 2, 
+                        username: 'TestUser2', 
+                        amount: 25000,
+                        loan_term: 12,
+                        purpose: '부동산 투자',
+                        user: {
+                            game_balance: 50000,
+                            role: 'investor',
+                            business_count: 0
+                        }
+                    }
+                ];
+                
+                const container = document.getElementById('loanApplications');
+                container.innerHTML = '';
+                
+                demoLoans.forEach(loan => {
+                    const creditScore = calculateCreditScore(loan.user);
+                    const creditGrade = getCreditGrade(creditScore);
+                    const maxLoan = calculateLoanLimit(creditScore, loan.user.game_balance);
+                    
+                    // 금리 계산
+                    const creditAdjustment = calculateInterestRate(creditScore, gameState.bankSettings.loanRate) - gameState.bankSettings.loanRate;
+                    const termAdjustment = calculateTermAdjustment(loan.loan_term || 3);
+                    const finalRate = gameState.bankSettings.loanRate + creditAdjustment + termAdjustment;
+                    const repaymentType = loan.repayment_type || 'equal';
+                    
+                    // 상환 계산
+                    const totalInterest = calculateTotalInterest(loan.amount, finalRate, loan.loan_term || 3, repaymentType);
+                    
+                    let paymentInfo = '';
+                    if (repaymentType === 'equal') {
+                        const monthlyPayment = calculateMonthlyPayment(loan.amount, finalRate, loan.loan_term || 3);
+                        paymentInfo = `<p style="margin: 5px 0;">월 상환금: <strong>${monthlyPayment.toLocaleString()} 코인</strong> (원리금균등)</p>`;
+                    } else {
+                        const firstPayment = calculatePrincipalPayment(loan.amount, finalRate, loan.loan_term || 3, 1);
+                        const lastPayment = calculatePrincipalPayment(loan.amount, finalRate, loan.loan_term || 3, loan.loan_term || 3);
+                        paymentInfo = `
+                            <p style="margin: 5px 0;">상환방식: <strong>원금균등</strong></p>
+                            <p style="margin: 5px 0;">첫달 상환금: <strong>${firstPayment.toLocaleString()} 코인</strong></p>
+                            <p style="margin: 5px 0;">마지막달: <strong>${lastPayment.toLocaleString()} 코인</strong></p>
+                        `;
+                    }
+                    
+                    const card = document.createElement('div');
+                    card.className = 'loan-card';
+                    
+                    // 자동심사 여부 확인
+                    const isAutoApproval = loan.auto_approval || false;
+                    const autoApprovalBadge = isAutoApproval ? 
+                        '<span style="background: var(--warning); color: black; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; margin-left: 10px;">⚡ 자동심사</span>' : '';
+                    
+                    card.innerHTML = `
+                        <div class="loan-header">
+                            <span class="loan-applicant">${loan.username}${autoApprovalBadge}</span>
+                            <span class="loan-amount">${loan.amount.toLocaleString()} 코인</span>
+                        </div>
+                        <p style="margin: 10px 0;">목적: ${loan.purpose}</p>
+                        <p style="margin: 10px 0;">
+                            신용등급: <span style="color: ${creditGrade.color}; font-weight: bold;">
+                                ${creditGrade.grade} (${creditScore}점) - ${creditGrade.description}
+                            </span>
+                        </p>
+                        <p style="margin: 10px 0;">대출 기간: <strong>${loan.loan_term || 3}개월</strong></p>
+                        <p style="margin: 10px 0;">현재 잔액: ${loan.user.game_balance.toLocaleString()} 코인</p>
+                        <p style="margin: 10px 0;">대출 한도: ${maxLoan.toLocaleString()} 코인</p>
+                        <p style="margin: 10px 0;">
+                            ${loan.amount > maxLoan ? 
+                                '<span style="color: var(--danger);">⚠️ 한도 초과 신청</span>' : 
+                                '<span style="color: var(--success);">✓ 한도 내 신청</span>'}
+                        </p>
+                        ${isAutoApproval ? '<p style="margin: 10px 0; color: var(--warning);">⚡ 자동심사 신청 (+0.2% 가산)</p>' : ''}
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <p style="margin: 5px 0;">적용 금리: <strong>${finalRate.toFixed(1)}%</strong> (신용: ${creditAdjustment > 0 ? '+' : ''}${creditAdjustment.toFixed(1)}%, 기간: ${termAdjustment > 0 ? '+' : ''}${termAdjustment}%${isAutoApproval ? ', 자동: +0.2%' : ''})</p>
+                            ${paymentInfo}
+                            <p style="margin: 5px 0;">총 이자: ${totalInterest.toLocaleString()} 코인</p>
+                            <p style="margin: 5px 0;">총 상환금: ${(loan.amount + totalInterest).toLocaleString()} 코인</p>
+                            <details style="margin-top: 10px;">
+                                <summary style="cursor: pointer; color: var(--primary);">상환 스케줄 보기</summary>
+                                <div style="margin-top: 10px; max-height: 200px; overflow-y: auto;">
+                                    ${calculateRepaymentSchedule(loan.amount, finalRate, loan.loan_term || 3, repaymentType)
+                                        .slice(0, 6)
+                                        .map(s => `<p style="margin: 3px 0; font-size: 0.85rem;">
+                                            ${s.month}개월: ${s.payment.toLocaleString()}코인 
+                                            (원금: ${s.principal.toLocaleString()}, 이자: ${s.interest.toLocaleString()})
+                                        </p>`).join('')}
+                                    ${(loan.loan_term || 3) > 6 ? '<p style="font-size: 0.85rem;">...</p>' : ''}
+                                </div>
+                            </details>
+                        </div>
+                        <div class="loan-actions">
+                            <button class="btn" style="background: var(--success);" onclick="approveLoan('${loan.id}', ${loan.amount})">승인</button>
+                            <button class="btn" style="background: var(--danger);" onclick="rejectLoan('${loan.id}')">거절</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                return;
+            }
+            
+            const { data } = await supabaseClient
+                .from('loans')
+                .select('*, users!borrower_id(username, game_balance, role, business_count)')
+                .eq('status', 'pending');
+            
+            const container = document.getElementById('loanApplications');
+            container.innerHTML = '';
+            
+            if (data && data.length > 0) {
+                data.forEach(loan => {
+                    const creditScore = loan.credit_score || calculateCreditScore(loan.users);
+                    const creditGrade = getCreditGrade(creditScore);
+                    const maxLoan = calculateLoanLimit(creditScore, loan.users.game_balance);
+                    
+                    // 금리 계산
+                    const creditAdjustment = calculateInterestRate(creditScore, gameState.bankSettings.loanRate) - gameState.bankSettings.loanRate;
+                    const termAdjustment = calculateTermAdjustment(loan.loan_term || 3);
+                    const finalRate = loan.interest_rate || (gameState.bankSettings.loanRate + creditAdjustment + termAdjustment);
+                    
+                    // 상환 계산
+                    const monthlyPayment = loan.monthly_payment || calculateMonthlyPayment(loan.amount, finalRate, loan.loan_term || 3);
+                    const totalInterest = calculateTotalInterest(loan.amount, finalRate, loan.loan_term || 3);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'loan-card';
+                    card.innerHTML = `
+                        <div class="loan-header">
+                            <span class="loan-applicant">${loan.users.username}</span>
+                            <span class="loan-amount">${loan.amount.toLocaleString()} 코인</span>
+                        </div>
+                        <p style="margin: 10px 0;">목적: ${loan.purpose || '사업자금'}</p>
+                        <p style="margin: 10px 0;">
+                            신용등급: <span style="color: ${creditGrade.color}; font-weight: bold;">
+                                ${creditGrade.grade} (${creditScore}점) - ${creditGrade.description}
+                            </span>
+                        </p>
+                        <p style="margin: 10px 0;">대출 기간: <strong>${loan.loan_term || 3}개월</strong></p>
+                        <p style="margin: 10px 0;">현재 잔액: ${loan.users.game_balance.toLocaleString()} 코인</p>
+                        <p style="margin: 10px 0;">대출 한도: ${maxLoan.toLocaleString()} 코인</p>
+                        <p style="margin: 10px 0;">
+                            ${loan.amount > maxLoan ? 
+                                '<span style="color: var(--danger);">⚠️ 한도 초과 신청</span>' : 
+                                '<span style="color: var(--success);">✓ 한도 내 신청</span>'}
+                        </p>
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <p style="margin: 5px 0;">적용 금리: <strong>${finalRate.toFixed(1)}%</strong></p>
+                            <p style="margin: 5px 0;">월 상환금: <strong>${monthlyPayment.toLocaleString()} 코인</strong></p>
+                            <p style="margin: 5px 0;">총 이자: ${totalInterest.toLocaleString()} 코인</p>
+                            <p style="margin: 5px 0;">총 상환금: ${(loan.amount + totalInterest).toLocaleString()} 코인</p>
+                        </div>
+                        <div class="loan-actions">
+                            <button class="btn" style="background: var(--success);" onclick="approveLoan('${loan.id}', ${loan.amount})">승인</button>
+                            <button class="btn" style="background: var(--danger);" onclick="rejectLoan('${loan.id}')">거절</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p>대출 신청이 없습니다</p>';
+            }
+        }
+        
+        // 내 대출 목록 로드
+        async function loadMyLoans() {
+            if (gameState.isDemo) {
+                // 데모 대출 데이터
+                const demoLoans = [
+                    {
+                        amount: 20000,
+                        status: 'approved',
+                        interest_rate: 7.5,
+                        purpose: '사업자금',
+                        loan_term: 12,
+                        monthly_payment: 1789,
+                        remaining_months: 10
+                    }
+                ];
+                
+                const container = document.getElementById('myLoans');
+                container.innerHTML = '';
+                
+                demoLoans.forEach(loan => {
+                    const totalInterest = calculateTotalInterest(loan.amount, loan.interest_rate, loan.loan_term);
+                    const remainingAmount = loan.monthly_payment * loan.remaining_months;
+                    
+                    const statusText = {
+                        'pending': '심사중',
+                        'approved': '상환중',
+                        'rejected': '거절됨',
+                        'completed': '완납'
+                    };
+                    
+                    const card = document.createElement('div');
+                    card.className = 'loan-card';
+                    card.innerHTML = `
+                        <div class="loan-header">
+                            <span>대출액: ${loan.amount.toLocaleString()} 코인</span>
+                            <span style="color: var(--primary);">${statusText[loan.status] || loan.status}</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <p style="margin: 5px 0;">목적: ${loan.purpose}</p>
+                            <p style="margin: 5px 0;">대출 기간: ${loan.loan_term}개월</p>
+                            <p style="margin: 5px 0;">이자율: ${loan.interest_rate}%</p>
+                            <p style="margin: 5px 0;">월 상환금: <strong>${loan.monthly_payment.toLocaleString()} 코인</strong></p>
+                            <p style="margin: 5px 0;">남은 기간: <strong>${loan.remaining_months}개월</strong></p>
+                            <p style="margin: 5px 0;">남은 상환금: ${remainingAmount.toLocaleString()} 코인</p>
+                            <p style="margin: 5px 0;">총 이자: ${totalInterest.toLocaleString()} 코인</p>
+                        </div>
+                        ${loan.status === 'approved' ? 
+                            `<button class="btn" style="background: var(--primary); padding: 10px;" onclick="repayLoan('${loan.id}')">
+                                조기 상환 (${remainingAmount.toLocaleString()} 코인)
+                            </button>` : ''}
+                    `;
+                    container.appendChild(card);
+                });
+                return;
+            }
+            
+            const { data } = await supabaseClient
+                .from('loans')
+                .select('*')
+                .eq('borrower_id', gameState.currentUser.id);
+            
+            const container = document.getElementById('myLoans');
+            container.innerHTML = '';
+            
+            if (data && data.length > 0) {
+                data.forEach(loan => {
+                    const statusText = {
+                        'pending': '심사중',
+                        'approved': '상환중',
+                        'rejected': '거절됨',
+                        'completed': '완납'
+                    };
+                    
+                    const totalInterest = calculateTotalInterest(loan.amount, loan.interest_rate || gameState.bankSettings.loanRate, loan.loan_term || 3);
+                    const monthlyPayment = loan.monthly_payment || calculateMonthlyPayment(loan.amount, loan.interest_rate || gameState.bankSettings.loanRate, loan.loan_term || 3);
+                    const remainingMonths = loan.remaining_months || loan.loan_term || 3;
+                    const remainingAmount = monthlyPayment * remainingMonths;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'loan-card';
+                    card.innerHTML = `
+                        <div class="loan-header">
+                            <span>대출액: ${loan.amount.toLocaleString()} 코인</span>
+                            <span style="color: ${loan.status === 'approved' ? 'var(--primary)' : loan.status === 'rejected' ? 'var(--danger)' : 'var(--warning)'};">
+                                ${statusText[loan.status] || loan.status}
+                            </span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <p style="margin: 5px 0;">목적: ${loan.purpose || '사업자금'}</p>
+                            <p style="margin: 5px 0;">대출 기간: ${loan.loan_term || 3}개월</p>
+                            <p style="margin: 5px 0;">이자율: ${loan.interest_rate || gameState.bankSettings.loanRate}%</p>
+                            ${loan.status === 'approved' ? `
+                                <p style="margin: 5px 0;">월 상환금: <strong>${monthlyPayment.toLocaleString()} 코인</strong></p>
+                                <p style="margin: 5px 0;">남은 기간: <strong>${remainingMonths}개월</strong></p>
+                                <p style="margin: 5px 0;">남은 상환금: ${remainingAmount.toLocaleString()} 코인</p>
+                            ` : ''}
+                            <p style="margin: 5px 0;">총 이자: ${totalInterest.toLocaleString()} 코인</p>
+                        </div>
+                        ${loan.status === 'approved' ? 
+                            `<button class="btn" style="background: var(--primary); padding: 10px;" onclick="repayLoan('${loan.id}')">
+                                조기 상환 (${remainingAmount.toLocaleString()} 코인)
+                            </button>` : ''}
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p>대출이 없습니다</p>';
+            }
+        }
+        
+        // 대출 조기 상환
+        async function repayLoan(loanId) {
+            if (!confirm('대출을 조기 상환하시겠습니까?')) return;
+            
+            showNotification('조기 상환 기능은 준비 중입니다', 'info');
+        }
+        
+        // 리더보드 로드
+        async function loadLeaderboard() {
+            if (gameState.isDemo) {
+                document.getElementById('leaderboardList').innerHTML = '<p>데모 모드에서는 사용할 수 없습니다</p>';
+                return;
+            }
+            
+            const { data } = await supabaseClient
+                .from('users')
+                .select('username, game_balance, role')
+                .order('game_balance', { ascending: false })
+                .limit(10);
+            
+            const container = document.getElementById('leaderboardList');
+            container.innerHTML = '';
+            
+            if (data && data.length > 0) {
+                data.forEach((user, index) => {
+                    const roleEmoji = {
+                        'banker': '🏦',
+                        'entrepreneur': '💼',
+                        'investor': '📈',
+                        'worker': '👷'
+                    };
+                    
+                    const item = document.createElement('div');
+                    item.className = 'leaderboard-item';
+                    if (user.username === gameState.currentUser.username) {
+                        item.style.background = 'rgba(99, 102, 241, 0.1)';
+                        item.style.border = '1px solid var(--primary)';
+                    }
+                    item.innerHTML = `
+                        <span class="leaderboard-rank">#${index + 1}</span>
+                        <span class="leaderboard-name">${roleEmoji[user.role] || '👤'} ${user.username}</span>
+                        <span class="leaderboard-balance">${user.game_balance.toLocaleString()} 코인</span>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+        }
+        
+        // 실시간 구독 설정
+        function setupRealtimeSubscriptions() {
+            if (!supabaseClient) return;
+            
+            // 거래 실시간 업데이트
+            supabaseClient
+                .channel('transactions')
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'transactions' },
+                    (payload) => {
+                        console.log('새 거래:', payload.new);
+                        updateDisplay();
+                    }
+                )
+                .subscribe();
+            
+            // 대출 신청 알림 (은행장용)
+            if (gameState.currentUser.role === 'banker') {
+                supabaseClient
+                    .channel('loans')
+                    .on('postgres_changes',
+                        { event: 'INSERT', schema: 'public', table: 'loans' },
+                        (payload) => {
+                            showNotification('새 대출 신청이 있습니다!', 'info');
+                            loadLoanApplications();
+                        }
+                    )
+                    .subscribe();
+            }
+            
+            // 금리 변경 알림
+            supabaseClient
+                .channel('bank_settings')
+                .on('postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'bank_settings' },
+                    (payload) => {
+                        if (gameState.currentUser.role !== 'banker') {
+                            showNotification(`금리가 변경되었습니다! 대출: ${payload.new.loan_rate}%, 예금: ${payload.new.deposit_rate}%`, 'info');
+                            gameState.bankSettings = payload.new;
+                        }
+                    }
+                )
+                .subscribe();
+        }
+        
+        // 자동 업데이트
+        function startAutoUpdate() {
+            // 1분마다 데이터 새로고침
+            setInterval(async () => {
+                if (!gameState.isDemo && supabaseClient) {
+                    // 수익 정산
+                    await supabaseClient.rpc('calculate_daily_revenue');
+                    
+                    // 최신 잔액 가져오기
+                    const { data } = await supabaseClient
+                        .from('users')
+                        .select('game_balance')
+                        .eq('id', gameState.currentUser.id)
+                        .single();
+                    
+                    if (data) {
+                        gameState.currentUser.game_balance = data.game_balance;
+                        updateDisplay();
+                    }
+                    
+                    // 은행장인 경우 이자 수익 추가
+                    if (gameState.currentUser.role === 'banker') {
+                        const { data: loans } = await supabaseClient
+                            .from('loans')
+                            .select('amount, interest_rate')
+                            .eq('status', 'approved');
+                        
+                        if (loans) {
+                            const interestIncome = loans.reduce((sum, loan) => {
+                                return sum + (loan.amount * (loan.interest_rate || gameState.bankSettings.loanRate) / 100 / 12);
+                            }, 0);
+                            
+                            if (interestIncome > 0) {
+                                gameState.bankSettings.bankAssets += Math.floor(interestIncome);
+                                updateBankDisplay();
+                            }
+                        }
+                    }
+                }
+            }, 60000);
+        }
+        
+        // 데이터 새로고침
+        async function refreshData() {
+            if (gameState.isDemo) {
+                // 데모 모드 가상 데이터
+                gameState.economy.totalUsers = Math.floor(Math.random() * 100) + 50;
+                gameState.economy.totalEconomy = Math.floor(Math.random() * 1000000) + 500000;
+                gameState.economy.totalBusinesses = Math.floor(Math.random() * 50) + 20;
+                gameState.economy.totalLoans = Math.floor(Math.random() * 200000) + 100000;
+                
+                updateDisplay();
+                showNotification('데이터를 새로고침했습니다 (데모)', 'success');
+                return;
+            }
+            
+            // 경제 통계 업데이트
+            const { data: users } = await supabaseClient
+                .from('users')
+                .select('game_balance');
+            
+            const { data: businesses } = await supabaseClient
+                .from('businesses')
+                .select('id');
+            
+            const { data: loans } = await supabaseClient
+                .from('loans')
+                .select('amount')
+                .eq('status', 'approved');
+            
+            gameState.economy.totalUsers = users ? users.length : 0;
+            gameState.economy.totalEconomy = users ? users.reduce((sum, u) => sum + u.game_balance, 0) : 0;
+            gameState.economy.totalBusinesses = businesses ? businesses.length : 0;
+            gameState.economy.totalLoans = loans ? loans.reduce((sum, l) => sum + l.amount, 0) : 0;
+            
+            updateDisplay();
+            showNotification('데이터를 새로고침했습니다', 'success');
+        }
+        
+        // 섹션 표시
+        function showSection(section) {
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.style.display = 'none';
+            });
+            
+            document.getElementById(`${section}-section`).style.display = 'block';
+            
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 섹션별 데이터 로드
+            switch(section) {
+                case 'business':
+                    loadMyBusinesses();
+                    break;
+                case 'bank':
+                    loadLoanApplications();
+                    break;
+                case 'loans':
+                    loadMyLoans();
+                    break;
+                case 'leaderboard':
+                    loadLeaderboard();
+                    break;
+            }
+        }
+        
+        // 화면 업데이트
+        function updateDisplay() {
+            document.getElementById('gameBalance').textContent = 
+                gameState.currentUser.game_balance.toLocaleString();
+            
+            // 총 자산 계산 (예금 + 사업 가치 등)
+            let totalAssets = gameState.currentUser.game_balance;
+            
+            document.getElementById('totalAssets').textContent = 
+                totalAssets.toLocaleString();
+            
+            // 신용점수 업데이트
+            const creditScore = calculateCreditScore(gameState.currentUser);
+            const creditGrade = getCreditGrade(creditScore);
+            const creditGradeElement = document.getElementById('creditGrade');
+            const creditScoreElement = document.getElementById('creditScore');
+            
+            if (creditGradeElement && creditScoreElement) {
+                creditGradeElement.textContent = creditGrade.grade;
+                creditGradeElement.style.color = creditGrade.color;
+                creditScoreElement.textContent = creditScore;
+            }
+            
+            document.getElementById('totalUsers').textContent = gameState.economy.totalUsers;
+            document.getElementById('totalEconomy').textContent = gameState.economy.totalEconomy.toLocaleString();
+            document.getElementById('totalBusinesses').textContent = gameState.economy.totalBusinesses;
+            document.getElementById('totalLoans').textContent = gameState.economy.totalLoans.toLocaleString();
+        }
+        
+        // 알림 표시
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 실시간 시장 데이터 업데이트 (데모용)
+        setInterval(() => {
+            if (gameState.isDemo || !gameState.currentUser) return;
+            
+            // BTC 가격 변동
+            const btcElement = document.querySelector('.market-item-price');
+            const btcChangeElement = document.querySelector('.market-item-change');
+            if (btcElement) {
+                const currentPrice = parseInt(btcElement.textContent.replace('Supabase 변수
         let supabaseClient = null;
         
         // Game State
@@ -866,8 +1924,278 @@
                 totalEconomy: 0,
                 totalBusinesses: 0,
                 totalLoans: 0
+            },
+            bankSettings: {
+                baseRate: 5.0,
+                loanRate: 8.0,
+                depositRate: 3.0,
+                bankAssets: 1000000,
+                policy: 'balanced'
             }
         };
+        
+        // 간단한 해시 함수 (실제 프로덕션에서는 bcrypt 등 사용 권장)
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // 이메일 암호화 (간단한 방식)
+        function encryptEmail(email) {
+            // Base64 인코딩으로 간단한 암호화
+            return btoa(email);
+        }
+
+        // 이메일 복호화
+        function decryptEmail(encryptedEmail) {
+            try {
+                return atob(encryptedEmail);
+            } catch {
+                return encryptedEmail; // 이미 평문인 경우
+            }
+        }
+        
+        // 대출 기간별 금리 조정
+        function calculateTermAdjustment(months) {
+            // 기간이 길수록 금리 상승
+            switch(months) {
+                case 1: return -0.5;   // 단기 할인
+                case 3: return 0;      // 기준
+                case 6: return 0.3;    // 소폭 상승
+                case 12: return 0.8;   // 중간 상승
+                case 36: return 1.5;   // 장기 가산
+                default: return 0;
+            }
+        }
+        
+        // 월 상환금 계산 (원리금균등상환)
+        function calculateMonthlyPayment(principal, annualRate, months) {
+            const monthlyRate = annualRate / 100 / 12;
+            if (monthlyRate === 0) return principal / months;
+            
+            const payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / 
+                           (Math.pow(1 + monthlyRate, months) - 1);
+            return Math.round(payment);
+        }
+        
+        // 월 상환금 계산 (원금균등상환)
+        function calculatePrincipalPayment(principal, annualRate, months, currentMonth = 1) {
+            const monthlyPrincipal = principal / months;
+            const monthlyRate = annualRate / 100 / 12;
+            const remainingPrincipal = principal - (monthlyPrincipal * (currentMonth - 1));
+            const monthlyInterest = remainingPrincipal * monthlyRate;
+            return Math.round(monthlyPrincipal + monthlyInterest);
+        }
+        
+        // 총 이자 계산 (상환방식별)
+        function calculateTotalInterest(principal, annualRate, months, repaymentType = 'equal') {
+            if (repaymentType === 'equal') {
+                // 원리금균등
+                const monthlyPayment = calculateMonthlyPayment(principal, annualRate, months);
+                return (monthlyPayment * months) - principal;
+            } else {
+                // 원금균등
+                const monthlyPrincipal = principal / months;
+                const monthlyRate = annualRate / 100 / 12;
+                let totalInterest = 0;
+                for (let i = 0; i < months; i++) {
+                    const remainingPrincipal = principal - (monthlyPrincipal * i);
+                    totalInterest += remainingPrincipal * monthlyRate;
+                }
+                return Math.round(totalInterest);
+            }
+        }
+        
+        // 상환 스케줄 계산
+        function calculateRepaymentSchedule(principal, annualRate, months, repaymentType = 'equal') {
+            const schedule = [];
+            const monthlyRate = annualRate / 100 / 12;
+            
+            if (repaymentType === 'equal') {
+                // 원리금균등
+                const monthlyPayment = calculateMonthlyPayment(principal, annualRate, months);
+                let remainingPrincipal = principal;
+                
+                for (let i = 1; i <= months; i++) {
+                    const interestPayment = remainingPrincipal * monthlyRate;
+                    const principalPayment = monthlyPayment - interestPayment;
+                    remainingPrincipal -= principalPayment;
+                    
+                    schedule.push({
+                        month: i,
+                        payment: monthlyPayment,
+                        principal: Math.round(principalPayment),
+                        interest: Math.round(interestPayment),
+                        remaining: Math.max(0, Math.round(remainingPrincipal))
+                    });
+                }
+            } else {
+                // 원금균등
+                const monthlyPrincipal = principal / months;
+                let remainingPrincipal = principal;
+                
+                for (let i = 1; i <= months; i++) {
+                    const interestPayment = remainingPrincipal * monthlyRate;
+                    const totalPayment = monthlyPrincipal + interestPayment;
+                    remainingPrincipal -= monthlyPrincipal;
+                    
+                    schedule.push({
+                        month: i,
+                        payment: Math.round(totalPayment),
+                        principal: Math.round(monthlyPrincipal),
+                        interest: Math.round(interestPayment),
+                        remaining: Math.max(0, Math.round(remainingPrincipal))
+                    });
+                }
+            }
+            
+            return schedule;
+        }
+        
+        // 신용점수 계산 (확장된 시스템: 300-1200점)
+        function calculateCreditScore(user) {
+            let score = 500; // 기본 점수
+            
+            // 잔액에 따른 점수 (최대 350점)
+            if (user.game_balance > 1000000) score += 350;
+            else if (user.game_balance > 500000) score += 300;
+            else if (user.game_balance > 200000) score += 250;
+            else if (user.game_balance > 100000) score += 200;
+            else if (user.game_balance > 50000) score += 150;
+            else if (user.game_balance > 20000) score += 100;
+            else if (user.game_balance > 10000) score += 50;
+            else if (user.game_balance > 5000) score += 25;
+            
+            // 역할에 따른 보너스 (최대 150점)
+            switch(user.role) {
+                case 'banker': score += 150; break;
+                case 'entrepreneur': score += 120; break;
+                case 'investor': score += 90; break;
+                case 'worker': score += 50; break;
+            }
+            
+            // 대출 이력 반영 (실제 데이터가 있을 경우)
+            if (user.loan_history) {
+                // 연체 이력당 -80점
+                score -= (user.loan_history.late_payments || 0) * 80;
+                // 완납 이력당 +50점
+                score += (user.loan_history.completed_loans || 0) * 50;
+                // 현재 대출 개수당 -30점
+                score -= (user.loan_history.active_loans || 0) * 30;
+                // 대출 상환률 보너스 (최대 100점)
+                if (user.loan_history.repayment_rate) {
+                    score += user.loan_history.repayment_rate * 100;
+                }
+            }
+            
+            // 사업 보유 여부 (최대 200점)
+            if (user.business_count) {
+                score += Math.min(user.business_count * 50, 200); // 사업당 50점, 최대 200점
+            }
+            
+            // 거래 활발도 보너스 (최대 100점)
+            if (user.transaction_count) {
+                score += Math.min(user.transaction_count * 2, 100); // 거래당 2점, 최대 100점
+            }
+            
+            // 계정 생성 후 시간 (데모에서는 랜덤)
+            if (gameState.isDemo) {
+                score += Math.floor(Math.random() * 100); // 0-100점 랜덤
+            } else if (user.account_age_days) {
+                score += Math.min(user.account_age_days * 5, 100); // 일당 5점, 최대 100점
+            }
+            
+            // 최소 300점, 최대 1200점
+            return Math.max(300, Math.min(1200, score));
+        }
+        
+        // 신용등급 계산 (확장된 등급 체계)
+        function getCreditGrade(score) {
+            if (score >= 1100) return { grade: 'SSS', color: '#fbbf24', description: '전설' };
+            if (score >= 1000) return { grade: 'SS', color: '#facc15', description: '최강' };
+            if (score >= 900) return { grade: 'S', color: '#84cc16', description: '엘리트' };
+            if (score >= 850) return { grade: 'AAA', color: '#10b981', description: '최우수' };
+            if (score >= 800) return { grade: 'AA+', color: '#10b981', description: '매우우수' };
+            if (score >= 750) return { grade: 'AA', color: '#10b981', description: '우수' };
+            if (score >= 700) return { grade: 'A+', color: '#22c55e', description: '매우양호' };
+            if (score >= 650) return { grade: 'A', color: '#22c55e', description: '양호' };
+            if (score >= 600) return { grade: 'BBB', color: '#84cc16', description: '보통' };
+            if (score >= 550) return { grade: 'BB', color: '#f59e0b', description: '주의' };
+            if (score >= 500) return { grade: 'B', color: '#fb923c', description: '위험' };
+            if (score >= 450) return { grade: 'CCC', color: '#f97316', description: '고위험' };
+            if (score >= 400) return { grade: 'CC', color: '#ef4444', description: '매우위험' };
+            if (score >= 350) return { grade: 'C', color: '#dc2626', description: '심각' };
+            return { grade: 'D', color: '#991b1b', description: '부적격' };
+        }
+        
+        // 대출 한도 계산 (최대 10배)
+        function calculateLoanLimit(creditScore, balance) {
+            let baseLimit = 10000; // 기본 한도
+            
+            // 신용점수에 따른 배수 (최대 10배)
+            let multiplier = 1;
+            if (creditScore >= 1100) multiplier = 10;      // SSS: 10배
+            else if (creditScore >= 1000) multiplier = 9;   // SS: 9배
+            else if (creditScore >= 900) multiplier = 8;    // S: 8배
+            else if (creditScore >= 850) multiplier = 7;    // AAA: 7배
+            else if (creditScore >= 800) multiplier = 6;    // AA+: 6배
+            else if (creditScore >= 750) multiplier = 5;    // AA: 5배
+            else if (creditScore >= 700) multiplier = 4;    // A+: 4배
+            else if (creditScore >= 650) multiplier = 3.5;  // A: 3.5배
+            else if (creditScore >= 600) multiplier = 3;    // BBB: 3배
+            else if (creditScore >= 550) multiplier = 2.5;  // BB: 2.5배
+            else if (creditScore >= 500) multiplier = 2;    // B: 2배
+            else if (creditScore >= 450) multiplier = 1.5;  // CCC: 1.5배
+            
+            // 현재 잔액의 일정 비율도 고려 (신용등급에 따라 차등)
+            let balanceMultiplier = 2; // 기본 2배
+            if (creditScore >= 900) balanceMultiplier = 5;      // S급 이상: 잔액의 5배
+            else if (creditScore >= 750) balanceMultiplier = 4; // AA급: 잔액의 4배
+            else if (creditScore >= 650) balanceMultiplier = 3; // A급: 잔액의 3배
+            
+            const balanceLimit = balance * balanceMultiplier;
+            
+            // 기본한도 × 배수와 잔액 기반 한도 중 큰 값 선택
+            const calculatedLimit = Math.max(baseLimit * multiplier, balanceLimit);
+            
+            // 신용등급별 최대 한도 설정
+            let maxLimit = 100000; // 기본 최대 10만
+            if (creditScore >= 1100) maxLimit = 1000000;    // SSS: 100만
+            else if (creditScore >= 1000) maxLimit = 500000; // SS: 50만
+            else if (creditScore >= 900) maxLimit = 300000;  // S: 30만
+            else if (creditScore >= 800) maxLimit = 200000;  // AA+: 20만
+            else if (creditScore >= 700) maxLimit = 150000;  // A+: 15만
+            
+            return Math.min(calculatedLimit, maxLimit);
+        }
+        
+        // 금리 계산 (신용등급별 차등 - 최대 7% 차이)
+        function calculateInterestRate(creditScore, baseRate) {
+            let adjustment = 0;
+            
+            // 더 세밀한 조정 (최대 ±3.5%)
+            if (creditScore >= 1100) adjustment = -3.5;      // SSS: -3.5%
+            else if (creditScore >= 1000) adjustment = -3.0;  // SS: -3.0%
+            else if (creditScore >= 900) adjustment = -2.5;   // S: -2.5%
+            else if (creditScore >= 850) adjustment = -2.0;   // AAA: -2.0%
+            else if (creditScore >= 800) adjustment = -1.5;   // AA+: -1.5%
+            else if (creditScore >= 750) adjustment = -1.2;   // AA: -1.2%
+            else if (creditScore >= 700) adjustment = -0.8;   // A+: -0.8%
+            else if (creditScore >= 650) adjustment = -0.5;   // A: -0.5%
+            else if (creditScore >= 600) adjustment = 0;      // BBB: 기준금리
+            else if (creditScore >= 550) adjustment = 0.5;    // BB: +0.5%
+            else if (creditScore >= 500) adjustment = 1.0;    // B: +1.0%
+            else if (creditScore >= 450) adjustment = 1.5;    // CCC: +1.5%
+            else if (creditScore >= 400) adjustment = 2.5;    // CC: +2.5%
+            else if (creditScore >= 350) adjustment = 3.0;    // C: +3.0%
+            else adjustment = 3.5;                            // D: +3.5%
+            
+            // 최소 0.1%, 최대 30%
+            return Math.max(0.1, Math.min(30, baseRate + adjustment));
+        }
         
         // Supabase 설정
         function setupSupabase() {
@@ -919,8 +2247,14 @@
         
         // 로그인
         async function login() {
+            const email = document.getElementById('email').value;
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            
+            if (!email || !email.includes('@')) {
+                showNotification('올바른 이메일을 입력해주세요', 'error');
+                return;
+            }
             
             if (!username || username.length < 3) {
                 showNotification('사용자명은 3자 이상이어야 합니다', 'error');
@@ -932,11 +2266,15 @@
                 return;
             }
             
+            const hashedPassword = await hashPassword(password);
+            const encryptedEmail = encryptEmail(email);
+            
             if (gameState.isDemo) {
                 // 데모 모드
                 gameState.currentUser = {
                     id: 'demo_' + Date.now(),
                     username: username,
+                    email: encryptedEmail,
                     game_balance: 1000,
                     role: null
                 };
@@ -963,8 +2301,8 @@
                             .insert({
                                 // id 제거 - 자동 생성되도록
                                 username: username,
-                                email: `${username.toLowerCase()}@game.com`,
-                                password_hash: password, // 실제로는 해시해야 하지만 간단하게
+                                email: encryptedEmail,
+                                password_hash: hashedPassword,
                                 game_balance: 1000
                             })
                             .select()
@@ -979,8 +2317,8 @@
                         gameState.currentUser = newUser;
                         showNotification('계정이 생성되었습니다!', 'success');
                     } else if (existingUser) {
-                        // 유저가 있으면 비밀번호 확인 (간단한 체크)
-                        if (existingUser.password_hash !== password) {
+                        // 유저가 있으면 비밀번호 확인
+                        if (existingUser.password_hash !== hashedPassword) {
                             showNotification('비밀번호가 틀렸습니다', 'error');
                             return;
                         }
@@ -1010,6 +2348,7 @@
                     gameState.currentUser = {
                         id: 'demo_' + Date.now(),
                         username: username,
+                        email: encryptedEmail,
                         game_balance: 1000,
                         role: null
                     };
@@ -1111,395 +2450,1094 @@
             showGame();
         }
         
-        // 게임 화면 표시
-        function showGame() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('roleSelection').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'block';
-            
-            // UI 업데이트
-            document.getElementById('userAvatar').textContent = gameState.currentUser.username[0].toUpperCase();
-            document.getElementById('userName').textContent = gameState.currentUser.username;
-            
-            const roleNames = {
-                'banker': '은행장',
-                'entrepreneur': '사업가',
-                'investor': '투자자',
-                'worker': '직장인'
-            };
-            document.getElementById('userRole').textContent = roleNames[gameState.currentUser.role] || '시민';
-            
-            // 은행장 메뉴 표시
-            if (gameState.currentUser.role === 'banker') {
-                document.getElementById('bankMenu').style.display = 'block';
+        // , '').replace(',', ''));
+                const change = (Math.random() - 0.5) * 1000;
+                const newPrice = Math.max(30000, Math.min(60000, currentPrice + change));
+                const changePercent = ((newPrice - currentPrice) / currentPrice * 100).toFixed(2);
+                
+                btcElement.textContent = 'Supabase 변수
+        let supabaseClient = null;
+        
+        // Game State
+        let gameState = {
+            currentUser: null,
+            selectedRole: null,
+            isDemo: false,
+            economy: {
+                totalUsers: 0,
+                totalEconomy: 0,
+                totalBusinesses: 0,
+                totalLoans: 0
+            },
+            bankSettings: {
+                baseRate: 5.0,
+                loanRate: 8.0,
+                depositRate: 3.0,
+                bankAssets: 1000000,
+                policy: 'balanced'
             }
-            
-            updateDisplay();
-            
-            // 실시간 업데이트 시작
-            if (!gameState.isDemo) {
-                setupRealtimeSubscriptions();
-                startAutoUpdate();
+        };
+        
+        // 간단한 해시 함수 (실제 프로덕션에서는 bcrypt 등 사용 권장)
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // 이메일 암호화 (간단한 방식)
+        function encryptEmail(email) {
+            // Base64 인코딩으로 간단한 암호화
+            return btoa(email);
+        }
+
+        // 이메일 복호화
+        function decryptEmail(encryptedEmail) {
+            try {
+                return atob(encryptedEmail);
+            } catch {
+                return encryptedEmail; // 이미 평문인 경우
             }
-            
-            showNotification(`환영합니다, ${gameState.currentUser.username}님!`, 'success');
         }
         
-        // 사업 시작
-        async function startBusiness() {
-            if (gameState.currentUser.game_balance < 10000) {
-                showNotification('사업 시작에는 최소 10,000 코인이 필요합니다', 'error');
-                return;
+        // 대출 기간별 금리 조정
+        function calculateTermAdjustment(months) {
+            // 기간이 길수록 금리 상승
+            switch(months) {
+                case 1: return -0.5;   // 단기 할인
+                case 3: return 0;      // 기준
+                case 6: return 0.3;    // 소폭 상승
+                case 12: return 0.8;   // 중간 상승
+                case 36: return 1.5;   // 장기 가산
+                default: return 0;
             }
+        }
+        
+        // 월 상환금 계산 (원리금균등상환)
+        function calculateMonthlyPayment(principal, annualRate, months) {
+            const monthlyRate = annualRate / 100 / 12;
+            if (monthlyRate === 0) return principal / months;
             
-            const businessTypes = ['카페', '편의점', '온라인 쇼핑몰', '음식점', 'IT 스타트업'];
-            const businessType = businessTypes[Math.floor(Math.random() * businessTypes.length)];
-            
-            if (gameState.isDemo) {
-                // 데모 모드
-                gameState.currentUser.game_balance -= 10000;
-                showNotification(`${businessType} 사업을 시작했습니다!`, 'success');
-                updateDisplay();
+            const payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / 
+                           (Math.pow(1 + monthlyRate, months) - 1);
+            return Math.round(payment);
+        }
+        
+        // 월 상환금 계산 (원금균등상환)
+        function calculatePrincipalPayment(principal, annualRate, months, currentMonth = 1) {
+            const monthlyPrincipal = principal / months;
+            const monthlyRate = annualRate / 100 / 12;
+            const remainingPrincipal = principal - (monthlyPrincipal * (currentMonth - 1));
+            const monthlyInterest = remainingPrincipal * monthlyRate;
+            return Math.round(monthlyPrincipal + monthlyInterest);
+        }
+        
+        // 총 이자 계산 (상환방식별)
+        function calculateTotalInterest(principal, annualRate, months, repaymentType = 'equal') {
+            if (repaymentType === 'equal') {
+                // 원리금균등
+                const monthlyPayment = calculateMonthlyPayment(principal, annualRate, months);
+                return (monthlyPayment * months) - principal;
             } else {
-                // Supabase RPC 호출
-                const { data, error } = await supabaseClient
-                    .rpc('start_business', {
-                        p_user_id: gameState.currentUser.id,
-                        p_business_type: businessType,
-                        p_investment: 10000
-                    });
-                
-                if (error) {
-                    showNotification(`사업 시작 실패: ${error.message}`, 'error');
-                    return;
+                // 원금균등
+                const monthlyPrincipal = principal / months;
+                const monthlyRate = annualRate / 100 / 12;
+                let totalInterest = 0;
+                for (let i = 0; i < months; i++) {
+                    const remainingPrincipal = principal - (monthlyPrincipal * i);
+                    totalInterest += remainingPrincipal * monthlyRate;
                 }
+                return Math.round(totalInterest);
+            }
+        }
+        
+        // 상환 스케줄 계산
+        function calculateRepaymentSchedule(principal, annualRate, months, repaymentType = 'equal') {
+            const schedule = [];
+            const monthlyRate = annualRate / 100 / 12;
+            
+            if (repaymentType === 'equal') {
+                // 원리금균등
+                const monthlyPayment = calculateMonthlyPayment(principal, annualRate, months);
+                let remainingPrincipal = principal;
                 
-                gameState.currentUser.game_balance -= 10000;
-                showNotification(`${businessType} 사업을 시작했습니다!`, 'success');
-                updateDisplay();
-                loadMyBusinesses();
-            }
-        }
-        
-        // 대출 신청
-        async function applyLoan() {
-            const loanAmount = prompt('대출 금액을 입력하세요 (최대 50,000 코인):');
-            if (!loanAmount || isNaN(loanAmount)) return;
-            
-            const amount = parseInt(loanAmount);
-            if (amount > 50000) {
-                showNotification('최대 대출 한도는 50,000 코인입니다', 'error');
-                return;
-            }
-            
-            if (gameState.isDemo) {
-                // 데모 모드
-                gameState.currentUser.game_balance += amount;
-                showNotification('대출이 승인되었습니다 (데모)', 'success');
-                updateDisplay();
-            } else {
-                // Supabase RPC 호출
-                const { data, error } = await supabaseClient
-                    .rpc('apply_for_loan', {
-                        p_user_id: gameState.currentUser.id,
-                        p_amount: amount,
-                        p_purpose: '사업자금'
-                    });
-                
-                if (error) {
-                    showNotification(`대출 신청 실패: ${error.message}`, 'error');
-                    return;
-                }
-                
-                showNotification('대출 신청이 접수되었습니다', 'success');
-                loadMyLoans();
-            }
-        }
-        
-        // 대출 승인 (은행장용)
-        async function approveLoan(loanId) {
-            if (gameState.currentUser.role !== 'banker') {
-                showNotification('은행장만 대출을 승인할 수 있습니다', 'error');
-                return;
-            }
-            
-            const { data, error } = await supabaseClient
-                .rpc('approve_loan', {
-                    p_loan_id: loanId,
-                    p_banker_id: gameState.currentUser.id
-                });
-            
-            if (error) {
-                showNotification(`대출 승인 실패: ${error.message}`, 'error');
-                return;
-            }
-            
-            showNotification('대출이 승인되었습니다', 'success');
-            loadLoanApplications();
-        }
-        
-        // 내 사업 목록 로드
-        async function loadMyBusinesses() {
-            if (gameState.isDemo) return;
-            
-            const { data } = await supabaseClient
-                .from('businesses')
-                .select('*')
-                .eq('owner_id', gameState.currentUser.id);
-            
-            const container = document.getElementById('myBusinesses');
-            container.innerHTML = '';
-            
-            if (data && data.length > 0) {
-                data.forEach(business => {
-                    const card = document.createElement('div');
-                    card.className = 'business-card';
-                    card.innerHTML = `
-                        <div class="business-header">
-                            <span class="business-name">${business.name}</span>
-                            <span class="business-profit">월 수익: ${business.monthly_revenue}</span>
-                        </div>
-                        <p>투자금: ${business.investment}</p>
-                    `;
-                    container.appendChild(card);
-                });
-            } else {
-                container.innerHTML = '<p>아직 사업이 없습니다</p>';
-            }
-        }
-        
-        // 대출 신청 목록 로드 (은행장용)
-        async function loadLoanApplications() {
-            if (gameState.isDemo) return;
-            
-            const { data } = await supabaseClient
-                .from('loans')
-                .select('*, users!borrower_id(username)')
-                .eq('status', 'pending');
-            
-            const container = document.getElementById('loanApplications');
-            container.innerHTML = '';
-            
-            if (data && data.length > 0) {
-                data.forEach(loan => {
-                    const card = document.createElement('div');
-                    card.className = 'loan-card';
-                    card.innerHTML = `
-                        <div class="loan-header">
-                            <span class="loan-applicant">${loan.users.username}</span>
-                            <span class="loan-amount">${loan.amount} 코인</span>
-                        </div>
-                        <div class="loan-actions">
-                            <button class="btn" onclick="approveLoan('${loan.id}')">승인</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            } else {
-                container.innerHTML = '<p>대출 신청이 없습니다</p>';
-            }
-        }
-        
-        // 내 대출 목록 로드
-        async function loadMyLoans() {
-            if (gameState.isDemo) return;
-            
-            const { data } = await supabaseClient
-                .from('loans')
-                .select('*')
-                .eq('borrower_id', gameState.currentUser.id);
-            
-            const container = document.getElementById('myLoans');
-            container.innerHTML = '';
-            
-            if (data && data.length > 0) {
-                data.forEach(loan => {
-                    const card = document.createElement('div');
-                    card.className = 'loan-card';
-                    card.innerHTML = `
-                        <div class="loan-header">
-                            <span>대출액: ${loan.amount} 코인</span>
-                            <span>상태: ${loan.status}</span>
-                        </div>
-                        <p>이자율: ${loan.interest_rate}%</p>
-                    `;
-                    container.appendChild(card);
-                });
-            } else {
-                container.innerHTML = '<p>대출이 없습니다</p>';
-            }
-        }
-        
-        // 리더보드 로드
-        async function loadLeaderboard() {
-            if (gameState.isDemo) {
-                document.getElementById('leaderboardList').innerHTML = '<p>데모 모드에서는 사용할 수 없습니다</p>';
-                return;
-            }
-            
-            const { data } = await supabaseClient
-                .from('users')
-                .select('username, game_balance, role')
-                .order('game_balance', { ascending: false })
-                .limit(10);
-            
-            const container = document.getElementById('leaderboardList');
-            container.innerHTML = '';
-            
-            if (data && data.length > 0) {
-                data.forEach((user, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'leaderboard-item';
-                    item.innerHTML = `
-                        <span class="leaderboard-rank">#${index + 1}</span>
-                        <span class="leaderboard-name">${user.username}</span>
-                        <span class="leaderboard-balance">${user.game_balance} 코인</span>
-                    `;
-                    container.appendChild(item);
-                });
-            }
-        }
-        
-        // 실시간 구독 설정
-        function setupRealtimeSubscriptions() {
-            if (!supabaseClient) return;
-            
-            // 거래 실시간 업데이트
-            supabaseClient
-                .channel('transactions')
-                .on('postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'transactions' },
-                    (payload) => {
-                        console.log('새 거래:', payload.new);
-                        updateDisplay();
-                    }
-                )
-                .subscribe();
-            
-            // 대출 신청 알림 (은행장용)
-            if (gameState.currentUser.role === 'banker') {
-                supabaseClient
-                    .channel('loans')
-                    .on('postgres_changes',
-                        { event: 'INSERT', schema: 'public', table: 'loans' },
-                        (payload) => {
-                            showNotification('새 대출 신청이 있습니다!', 'info');
-                            loadLoanApplications();
-                        }
-                    )
-                    .subscribe();
-            }
-        }
-        
-        // 자동 업데이트
-        function startAutoUpdate() {
-            // 1분마다 데이터 새로고침
-            setInterval(async () => {
-                if (!gameState.isDemo && supabaseClient) {
-                    // 수익 정산
-                    await supabaseClient.rpc('calculate_daily_revenue');
+                for (let i = 1; i <= months; i++) {
+                    const interestPayment = remainingPrincipal * monthlyRate;
+                    const principalPayment = monthlyPayment - interestPayment;
+                    remainingPrincipal -= principalPayment;
                     
-                    // 최신 잔액 가져오기
-                    const { data } = await supabaseClient
+                    schedule.push({
+                        month: i,
+                        payment: monthlyPayment,
+                        principal: Math.round(principalPayment),
+                        interest: Math.round(interestPayment),
+                        remaining: Math.max(0, Math.round(remainingPrincipal))
+                    });
+                }
+            } else {
+                // 원금균등
+                const monthlyPrincipal = principal / months;
+                let remainingPrincipal = principal;
+                
+                for (let i = 1; i <= months; i++) {
+                    const interestPayment = remainingPrincipal * monthlyRate;
+                    const totalPayment = monthlyPrincipal + interestPayment;
+                    remainingPrincipal -= monthlyPrincipal;
+                    
+                    schedule.push({
+                        month: i,
+                        payment: Math.round(totalPayment),
+                        principal: Math.round(monthlyPrincipal),
+                        interest: Math.round(interestPayment),
+                        remaining: Math.max(0, Math.round(remainingPrincipal))
+                    });
+                }
+            }
+            
+            return schedule;
+        }
+        
+        // 신용점수 계산 (확장된 시스템: 300-1200점)
+        function calculateCreditScore(user) {
+            let score = 500; // 기본 점수
+            
+            // 잔액에 따른 점수 (최대 350점)
+            if (user.game_balance > 1000000) score += 350;
+            else if (user.game_balance > 500000) score += 300;
+            else if (user.game_balance > 200000) score += 250;
+            else if (user.game_balance > 100000) score += 200;
+            else if (user.game_balance > 50000) score += 150;
+            else if (user.game_balance > 20000) score += 100;
+            else if (user.game_balance > 10000) score += 50;
+            else if (user.game_balance > 5000) score += 25;
+            
+            // 역할에 따른 보너스 (최대 150점)
+            switch(user.role) {
+                case 'banker': score += 150; break;
+                case 'entrepreneur': score += 120; break;
+                case 'investor': score += 90; break;
+                case 'worker': score += 50; break;
+            }
+            
+            // 대출 이력 반영 (실제 데이터가 있을 경우)
+            if (user.loan_history) {
+                // 연체 이력당 -80점
+                score -= (user.loan_history.late_payments || 0) * 80;
+                // 완납 이력당 +50점
+                score += (user.loan_history.completed_loans || 0) * 50;
+                // 현재 대출 개수당 -30점
+                score -= (user.loan_history.active_loans || 0) * 30;
+                // 대출 상환률 보너스 (최대 100점)
+                if (user.loan_history.repayment_rate) {
+                    score += user.loan_history.repayment_rate * 100;
+                }
+            }
+            
+            // 사업 보유 여부 (최대 200점)
+            if (user.business_count) {
+                score += Math.min(user.business_count * 50, 200); // 사업당 50점, 최대 200점
+            }
+            
+            // 거래 활발도 보너스 (최대 100점)
+            if (user.transaction_count) {
+                score += Math.min(user.transaction_count * 2, 100); // 거래당 2점, 최대 100점
+            }
+            
+            // 계정 생성 후 시간 (데모에서는 랜덤)
+            if (gameState.isDemo) {
+                score += Math.floor(Math.random() * 100); // 0-100점 랜덤
+            } else if (user.account_age_days) {
+                score += Math.min(user.account_age_days * 5, 100); // 일당 5점, 최대 100점
+            }
+            
+            // 최소 300점, 최대 1200점
+            return Math.max(300, Math.min(1200, score));
+        }
+        
+        // 신용등급 계산 (확장된 등급 체계)
+        function getCreditGrade(score) {
+            if (score >= 1100) return { grade: 'SSS', color: '#fbbf24', description: '전설' };
+            if (score >= 1000) return { grade: 'SS', color: '#facc15', description: '최강' };
+            if (score >= 900) return { grade: 'S', color: '#84cc16', description: '엘리트' };
+            if (score >= 850) return { grade: 'AAA', color: '#10b981', description: '최우수' };
+            if (score >= 800) return { grade: 'AA+', color: '#10b981', description: '매우우수' };
+            if (score >= 750) return { grade: 'AA', color: '#10b981', description: '우수' };
+            if (score >= 700) return { grade: 'A+', color: '#22c55e', description: '매우양호' };
+            if (score >= 650) return { grade: 'A', color: '#22c55e', description: '양호' };
+            if (score >= 600) return { grade: 'BBB', color: '#84cc16', description: '보통' };
+            if (score >= 550) return { grade: 'BB', color: '#f59e0b', description: '주의' };
+            if (score >= 500) return { grade: 'B', color: '#fb923c', description: '위험' };
+            if (score >= 450) return { grade: 'CCC', color: '#f97316', description: '고위험' };
+            if (score >= 400) return { grade: 'CC', color: '#ef4444', description: '매우위험' };
+            if (score >= 350) return { grade: 'C', color: '#dc2626', description: '심각' };
+            return { grade: 'D', color: '#991b1b', description: '부적격' };
+        }
+        
+        // 대출 한도 계산 (최대 10배)
+        function calculateLoanLimit(creditScore, balance) {
+            let baseLimit = 10000; // 기본 한도
+            
+            // 신용점수에 따른 배수 (최대 10배)
+            let multiplier = 1;
+            if (creditScore >= 1100) multiplier = 10;      // SSS: 10배
+            else if (creditScore >= 1000) multiplier = 9;   // SS: 9배
+            else if (creditScore >= 900) multiplier = 8;    // S: 8배
+            else if (creditScore >= 850) multiplier = 7;    // AAA: 7배
+            else if (creditScore >= 800) multiplier = 6;    // AA+: 6배
+            else if (creditScore >= 750) multiplier = 5;    // AA: 5배
+            else if (creditScore >= 700) multiplier = 4;    // A+: 4배
+            else if (creditScore >= 650) multiplier = 3.5;  // A: 3.5배
+            else if (creditScore >= 600) multiplier = 3;    // BBB: 3배
+            else if (creditScore >= 550) multiplier = 2.5;  // BB: 2.5배
+            else if (creditScore >= 500) multiplier = 2;    // B: 2배
+            else if (creditScore >= 450) multiplier = 1.5;  // CCC: 1.5배
+            
+            // 현재 잔액의 일정 비율도 고려 (신용등급에 따라 차등)
+            let balanceMultiplier = 2; // 기본 2배
+            if (creditScore >= 900) balanceMultiplier = 5;      // S급 이상: 잔액의 5배
+            else if (creditScore >= 750) balanceMultiplier = 4; // AA급: 잔액의 4배
+            else if (creditScore >= 650) balanceMultiplier = 3; // A급: 잔액의 3배
+            
+            const balanceLimit = balance * balanceMultiplier;
+            
+            // 기본한도 × 배수와 잔액 기반 한도 중 큰 값 선택
+            const calculatedLimit = Math.max(baseLimit * multiplier, balanceLimit);
+            
+            // 신용등급별 최대 한도 설정
+            let maxLimit = 100000; // 기본 최대 10만
+            if (creditScore >= 1100) maxLimit = 1000000;    // SSS: 100만
+            else if (creditScore >= 1000) maxLimit = 500000; // SS: 50만
+            else if (creditScore >= 900) maxLimit = 300000;  // S: 30만
+            else if (creditScore >= 800) maxLimit = 200000;  // AA+: 20만
+            else if (creditScore >= 700) maxLimit = 150000;  // A+: 15만
+            
+            return Math.min(calculatedLimit, maxLimit);
+        }
+        
+        // 금리 계산 (신용등급별 차등 - 최대 7% 차이)
+        function calculateInterestRate(creditScore, baseRate) {
+            let adjustment = 0;
+            
+            // 더 세밀한 조정 (최대 ±3.5%)
+            if (creditScore >= 1100) adjustment = -3.5;      // SSS: -3.5%
+            else if (creditScore >= 1000) adjustment = -3.0;  // SS: -3.0%
+            else if (creditScore >= 900) adjustment = -2.5;   // S: -2.5%
+            else if (creditScore >= 850) adjustment = -2.0;   // AAA: -2.0%
+            else if (creditScore >= 800) adjustment = -1.5;   // AA+: -1.5%
+            else if (creditScore >= 750) adjustment = -1.2;   // AA: -1.2%
+            else if (creditScore >= 700) adjustment = -0.8;   // A+: -0.8%
+            else if (creditScore >= 650) adjustment = -0.5;   // A: -0.5%
+            else if (creditScore >= 600) adjustment = 0;      // BBB: 기준금리
+            else if (creditScore >= 550) adjustment = 0.5;    // BB: +0.5%
+            else if (creditScore >= 500) adjustment = 1.0;    // B: +1.0%
+            else if (creditScore >= 450) adjustment = 1.5;    // CCC: +1.5%
+            else if (creditScore >= 400) adjustment = 2.5;    // CC: +2.5%
+            else if (creditScore >= 350) adjustment = 3.0;    // C: +3.0%
+            else adjustment = 3.5;                            // D: +3.5%
+            
+            // 최소 0.1%, 최대 30%
+            return Math.max(0.1, Math.min(30, baseRate + adjustment));
+        }
+        
+        // Supabase 설정
+        function setupSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (!url || !key) {
+                showNotification('Supabase URL과 Key를 입력해주세요', 'error');
+                return;
+            }
+            
+            // Supabase 클라이언트 초기화
+            const { createClient } = supabase;
+            supabaseClient = createClient(url, key);
+            
+            // 로컬스토리지에 저장
+            localStorage.setItem('supabaseUrl', url);
+            localStorage.setItem('supabaseKey', key);
+            
+            showNotification('Supabase 연결 성공!', 'success');
+            
+            // 로그인 화면으로 이동
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+        
+        // 데모 모드
+        function playDemo() {
+            gameState.isDemo = true;
+            showNotification('데모 모드로 플레이합니다', 'info');
+            
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+        
+        // 페이지 로드 시 체크
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
+            
+            if (savedUrl && savedKey) {
+                const { createClient } = supabase;
+                supabaseClient = createClient(savedUrl, savedKey);
+                
+                document.getElementById('setupScreen').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'flex';
+            }
+        };
+        
+        // 로그인
+        async function login() {
+            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !email.includes('@')) {
+                showNotification('올바른 이메일을 입력해주세요', 'error');
+                return;
+            }
+            
+            if (!username || username.length < 3) {
+                showNotification('사용자명은 3자 이상이어야 합니다', 'error');
+                return;
+            }
+            
+            if (!password || password.length < 6) {
+                showNotification('비밀번호는 6자 이상이어야 합니다', 'error');
+                return;
+            }
+            
+            const hashedPassword = await hashPassword(password);
+            const encryptedEmail = encryptEmail(email);
+            
+            if (gameState.isDemo) {
+                // 데모 모드
+                gameState.currentUser = {
+                    id: 'demo_' + Date.now(),
+                    username: username,
+                    email: encryptedEmail,
+                    game_balance: 1000,
+                    role: null
+                };
+                showRoleSelection();
+            } else {
+                // 간단한 로그인 (인증 우회)
+                try {
+                    showNotification('로그인 중...', 'info');
+                    
+                    // 먼저 유저가 있는지 확인
+                    let { data: existingUser, error: checkError } = await supabaseClient
                         .from('users')
-                        .select('game_balance')
-                        .eq('id', gameState.currentUser.id)
+                        .select('*')
+                        .eq('username', username)
                         .single();
                     
-                    if (data) {
-                        gameState.currentUser.game_balance = data.game_balance;
-                        updateDisplay();
+                    if (checkError && checkError.code === 'PGRST116') {
+                        // 유저가 없으면 생성
+                        showNotification('새 계정 생성 중...', 'info');
+                        
+                        // id를 지정하지 않으면 Supabase가 자동으로 UUID 생성
+                        const { data: newUser, error: insertError } = await supabaseClient
+                            .from('users')
+                            .insert({
+                                // id 제거 - 자동 생성되도록
+                                username: username,
+                                email: encryptedEmail,
+                                password_hash: hashedPassword,
+                                game_balance: 1000
+                            })
+                            .select()
+                            .single();
+                        
+                        if (insertError) {
+                            showNotification('계정 생성 실패: ' + insertError.message, 'error');
+                            console.error('Insert error:', insertError);
+                            return;
+                        }
+                        
+                        gameState.currentUser = newUser;
+                        showNotification('계정이 생성되었습니다!', 'success');
+                    } else if (existingUser) {
+                        // 유저가 있으면 비밀번호 확인
+                        if (existingUser.password_hash !== hashedPassword) {
+                            showNotification('비밀번호가 틀렸습니다', 'error');
+                            return;
+                        }
+                        
+                        gameState.currentUser = existingUser;
+                        showNotification('로그인 성공!', 'success');
+                    } else {
+                        showNotification('로그인 중 오류가 발생했습니다', 'error');
+                        return;
                     }
+                    
+                    // 역할 확인
+                    if (!gameState.currentUser.role) {
+                        showNotification('역할을 선택해주세요', 'info');
+                        showRoleSelection();
+                    } else {
+                        showNotification(`환영합니다, ${username}님!`, 'success');
+                        showGame();
+                    }
+                    
+                } catch (err) {
+                    // 네트워크 오류 시 데모 모드로 전환
+                    showNotification('서버 연결 실패. 데모 모드로 전환합니다.', 'warning');
+                    console.error('Login error:', err);
+                    
+                    gameState.isDemo = true;
+                    gameState.currentUser = {
+                        id: 'demo_' + Date.now(),
+                        username: username,
+                        email: encryptedEmail,
+                        game_balance: 1000,
+                        role: null
+                    };
+                    showRoleSelection();
                 }
-            }, 60000);
+            }
         }
         
-        // 데이터 새로고침
-        async function refreshData() {
-            if (gameState.isDemo) {
-                showNotification('데모 모드에서는 사용할 수 없습니다', 'info');
+        // 로그인 도움말
+        function showLoginHelp() {
+            showNotification('이메일과 닉네임, 비밀번호를 입력하면 자동으로 계정이 생성됩니다!', 'info');
+        }
+        
+        // 게스트 로그인
+        function loginAsGuest() {
+            gameState.isDemo = true;
+            gameState.currentUser = {
+                id: 'guest_' + Date.now(),
+                username: 'Guest_' + Math.floor(Math.random() * 10000),
+                email: 'guest@demo.com',
+                game_balance: 500,
+                role: null
+            };
+            
+            showRoleSelection();
+        }
+        
+        // 역할 선택 화면 표시
+        function showRoleSelection() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('roleSelection').style.display = 'block';
+            
+            // 은행장 역할 체크 (Supabase 연결 시)
+            if (!gameState.isDemo && supabaseClient) {
+                checkBankerRole();
+            }
+        }
+        
+        // 은행장 역할 체크
+        async function checkBankerRole() {
+            const { data } = await supabaseClient
+                .from('users')
+                .select('id')
+                .eq('role', 'banker')
+                .limit(1);
+            
+            if (data && data.length > 0) {
+                document.getElementById('role-banker').style.opacity = '0.5';
+                document.getElementById('role-banker').style.pointerEvents = 'none';
+            }
+        }
+        
+        // 역할 선택
+        function selectRole(role) {
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            document.getElementById(`role-${role}`).classList.add('selected');
+            gameState.selectedRole = role;
+        }
+        
+        // 역할 확정
+        async function confirmRole() {
+            if (!gameState.selectedRole) {
+                showNotification('역할을 선택해주세요', 'error');
                 return;
             }
             
-            // 경제 통계 업데이트
-            const { data: users } = await supabaseClient
-                .from('users')
-                .select('game_balance');
+            gameState.currentUser.role = gameState.selectedRole;
             
-            const { data: businesses } = await supabaseClient
-                .from('businesses')
-                .select('id');
+            // 역할 보너스
+            switch (gameState.selectedRole) {
+                case 'banker':
+                    gameState.currentUser.game_balance += 10000;
+                    break;
+                case 'entrepreneur':
+                    gameState.currentUser.game_balance += 5000;
+                    break;
+                case 'investor':
+                    gameState.currentUser.game_balance += 7000;
+                    break;
+                case 'worker':
+                    gameState.currentUser.game_balance += 2000;
+                    break;
+            }
             
-            const { data: loans } = await supabaseClient
-                .from('loans')
-                .select('amount')
-                .eq('status', 'approved');
+            // Supabase에 역할 업데이트
+            if (!gameState.isDemo && supabaseClient) {
+                await supabaseClient
+                    .from('users')
+                    .update({ 
+                        role: gameState.selectedRole,
+                        game_balance: gameState.currentUser.game_balance
+                    })
+                    .eq('id', gameState.currentUser.id);
+            }
             
-            gameState.economy.totalUsers = users ? users.length : 0;
-            gameState.economy.totalEconomy = users ? users.reduce((sum, u) => sum + u.game_balance, 0) : 0;
-            gameState.economy.totalBusinesses = businesses ? businesses.length : 0;
-            gameState.economy.totalLoans = loans ? loans.reduce((sum, l) => sum + l.amount, 0) : 0;
-            
-            updateDisplay();
-            showNotification('데이터를 새로고침했습니다', 'success');
+            showGame();
         }
         
-        // 섹션 표시
-        function showSection(section) {
-            document.querySelectorAll('.content-section').forEach(sec => {
-                sec.style.display = 'none';
-            });
-            
-            document.getElementById(`${section}-section`).style.display = 'block';
-            
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // 섹션별 데이터 로드
-            switch(section) {
-                case 'business':
-                    loadMyBusinesses();
-                    break;
-                case 'bank':
-                    loadLoanApplications();
-                    break;
-                case 'loans':
-                    loadMyLoans();
-                    break;
-                case 'leaderboard':
-                    loadLeaderboard();
-                    break;
+        //  + newPrice.toLocaleString();
+                btcChangeElement.textContent = (changePercent > 0 ? '+' : '') + changePercent + '%';
+                btcChangeElement.className = changePercent > 0 ? 'market-item-change' : 'market-item-change negative';
+            }
+        }, 5000);
+    </script>
+</body>
+</html>Supabase 변수
+        let supabaseClient = null;
+        
+        // Game State
+        let gameState = {
+            currentUser: null,
+            selectedRole: null,
+            isDemo: false,
+            economy: {
+                totalUsers: 0,
+                totalEconomy: 0,
+                totalBusinesses: 0,
+                totalLoans: 0
+            },
+            bankSettings: {
+                baseRate: 5.0,
+                loanRate: 8.0,
+                depositRate: 3.0,
+                bankAssets: 1000000,
+                policy: 'balanced'
+            }
+        };
+        
+        // 간단한 해시 함수 (실제 프로덕션에서는 bcrypt 등 사용 권장)
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // 이메일 암호화 (간단한 방식)
+        function encryptEmail(email) {
+            // Base64 인코딩으로 간단한 암호화
+            return btoa(email);
+        }
+
+        // 이메일 복호화
+        function decryptEmail(encryptedEmail) {
+            try {
+                return atob(encryptedEmail);
+            } catch {
+                return encryptedEmail; // 이미 평문인 경우
             }
         }
         
-        // 화면 업데이트
-        function updateDisplay() {
-            document.getElementById('gameBalance').textContent = 
-                gameState.currentUser.game_balance.toLocaleString();
-            
-            document.getElementById('totalAssets').textContent = 
-                gameState.currentUser.game_balance.toLocaleString();
-            
-            document.getElementById('totalUsers').textContent = gameState.economy.totalUsers;
-            document.getElementById('totalEconomy').textContent = gameState.economy.totalEconomy.toLocaleString();
-            document.getElementById('totalBusinesses').textContent = gameState.economy.totalBusinesses;
-            document.getElementById('totalLoans').textContent = gameState.economy.totalLoans.toLocaleString();
+        // 대출 기간별 금리 조정
+        function calculateTermAdjustment(months) {
+            // 기간이 길수록 금리 상승
+            switch(months) {
+                case 1: return -0.5;   // 단기 할인
+                case 3: return 0;      // 기준
+                case 6: return 0.3;    // 소폭 상승
+                case 12: return 0.8;   // 중간 상승
+                case 36: return 1.5;   // 장기 가산
+                default: return 0;
+            }
         }
         
-        // 알림 표시
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            const notificationText = document.getElementById('notificationText');
+        // 월 상환금 계산 (원리금균등상환)
+        function calculateMonthlyPayment(principal, annualRate, months) {
+            const monthlyRate = annualRate / 100 / 12;
+            if (monthlyRate === 0) return principal / months;
             
-            notificationText.textContent = message;
-            notification.className = `notification ${type} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
+            const payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / 
+                           (Math.pow(1 + monthlyRate, months) - 1);
+            return Math.round(payment);
         }
-    </script>
-</body>
-</html>
+        
+        // 월 상환금 계산 (원금균등상환)
+        function calculatePrincipalPayment(principal, annualRate, months, currentMonth = 1) {
+            const monthlyPrincipal = principal / months;
+            const monthlyRate = annualRate / 100 / 12;
+            const remainingPrincipal = principal - (monthlyPrincipal * (currentMonth - 1));
+            const monthlyInterest = remainingPrincipal * monthlyRate;
+            return Math.round(monthlyPrincipal + monthlyInterest);
+        }
+        
+        // 총 이자 계산 (상환방식별)
+        function calculateTotalInterest(principal, annualRate, months, repaymentType = 'equal') {
+            if (repaymentType === 'equal') {
+                // 원리금균등
+                const monthlyPayment = calculateMonthlyPayment(principal, annualRate, months);
+                return (monthlyPayment * months) - principal;
+            } else {
+                // 원금균등
+                const monthlyPrincipal = principal / months;
+                const monthlyRate = annualRate / 100 / 12;
+                let totalInterest = 0;
+                for (let i = 0; i < months; i++) {
+                    const remainingPrincipal = principal - (monthlyPrincipal * i);
+                    totalInterest += remainingPrincipal * monthlyRate;
+                }
+                return Math.round(totalInterest);
+            }
+        }
+        
+        // 상환 스케줄 계산
+        function calculateRepaymentSchedule(principal, annualRate, months, repaymentType = 'equal') {
+            const schedule = [];
+            const monthlyRate = annualRate / 100 / 12;
+            
+            if (repaymentType === 'equal') {
+                // 원리금균등
+                const monthlyPayment = calculateMonthlyPayment(principal, annualRate, months);
+                let remainingPrincipal = principal;
+                
+                for (let i = 1; i <= months; i++) {
+                    const interestPayment = remainingPrincipal * monthlyRate;
+                    const principalPayment = monthlyPayment - interestPayment;
+                    remainingPrincipal -= principalPayment;
+                    
+                    schedule.push({
+                        month: i,
+                        payment: monthlyPayment,
+                        principal: Math.round(principalPayment),
+                        interest: Math.round(interestPayment),
+                        remaining: Math.max(0, Math.round(remainingPrincipal))
+                    });
+                }
+            } else {
+                // 원금균등
+                const monthlyPrincipal = principal / months;
+                let remainingPrincipal = principal;
+                
+                for (let i = 1; i <= months; i++) {
+                    const interestPayment = remainingPrincipal * monthlyRate;
+                    const totalPayment = monthlyPrincipal + interestPayment;
+                    remainingPrincipal -= monthlyPrincipal;
+                    
+                    schedule.push({
+                        month: i,
+                        payment: Math.round(totalPayment),
+                        principal: Math.round(monthlyPrincipal),
+                        interest: Math.round(interestPayment),
+                        remaining: Math.max(0, Math.round(remainingPrincipal))
+                    });
+                }
+            }
+            
+            return schedule;
+        }
+        
+        // 신용점수 계산 (확장된 시스템: 300-1200점)
+        function calculateCreditScore(user) {
+            let score = 500; // 기본 점수
+            
+            // 잔액에 따른 점수 (최대 350점)
+            if (user.game_balance > 1000000) score += 350;
+            else if (user.game_balance > 500000) score += 300;
+            else if (user.game_balance > 200000) score += 250;
+            else if (user.game_balance > 100000) score += 200;
+            else if (user.game_balance > 50000) score += 150;
+            else if (user.game_balance > 20000) score += 100;
+            else if (user.game_balance > 10000) score += 50;
+            else if (user.game_balance > 5000) score += 25;
+            
+            // 역할에 따른 보너스 (최대 150점)
+            switch(user.role) {
+                case 'banker': score += 150; break;
+                case 'entrepreneur': score += 120; break;
+                case 'investor': score += 90; break;
+                case 'worker': score += 50; break;
+            }
+            
+            // 대출 이력 반영 (실제 데이터가 있을 경우)
+            if (user.loan_history) {
+                // 연체 이력당 -80점
+                score -= (user.loan_history.late_payments || 0) * 80;
+                // 완납 이력당 +50점
+                score += (user.loan_history.completed_loans || 0) * 50;
+                // 현재 대출 개수당 -30점
+                score -= (user.loan_history.active_loans || 0) * 30;
+                // 대출 상환률 보너스 (최대 100점)
+                if (user.loan_history.repayment_rate) {
+                    score += user.loan_history.repayment_rate * 100;
+                }
+            }
+            
+            // 사업 보유 여부 (최대 200점)
+            if (user.business_count) {
+                score += Math.min(user.business_count * 50, 200); // 사업당 50점, 최대 200점
+            }
+            
+            // 거래 활발도 보너스 (최대 100점)
+            if (user.transaction_count) {
+                score += Math.min(user.transaction_count * 2, 100); // 거래당 2점, 최대 100점
+            }
+            
+            // 계정 생성 후 시간 (데모에서는 랜덤)
+            if (gameState.isDemo) {
+                score += Math.floor(Math.random() * 100); // 0-100점 랜덤
+            } else if (user.account_age_days) {
+                score += Math.min(user.account_age_days * 5, 100); // 일당 5점, 최대 100점
+            }
+            
+            // 최소 300점, 최대 1200점
+            return Math.max(300, Math.min(1200, score));
+        }
+        
+        // 신용등급 계산 (확장된 등급 체계)
+        function getCreditGrade(score) {
+            if (score >= 1100) return { grade: 'SSS', color: '#fbbf24', description: '전설' };
+            if (score >= 1000) return { grade: 'SS', color: '#facc15', description: '최강' };
+            if (score >= 900) return { grade: 'S', color: '#84cc16', description: '엘리트' };
+            if (score >= 850) return { grade: 'AAA', color: '#10b981', description: '최우수' };
+            if (score >= 800) return { grade: 'AA+', color: '#10b981', description: '매우우수' };
+            if (score >= 750) return { grade: 'AA', color: '#10b981', description: '우수' };
+            if (score >= 700) return { grade: 'A+', color: '#22c55e', description: '매우양호' };
+            if (score >= 650) return { grade: 'A', color: '#22c55e', description: '양호' };
+            if (score >= 600) return { grade: 'BBB', color: '#84cc16', description: '보통' };
+            if (score >= 550) return { grade: 'BB', color: '#f59e0b', description: '주의' };
+            if (score >= 500) return { grade: 'B', color: '#fb923c', description: '위험' };
+            if (score >= 450) return { grade: 'CCC', color: '#f97316', description: '고위험' };
+            if (score >= 400) return { grade: 'CC', color: '#ef4444', description: '매우위험' };
+            if (score >= 350) return { grade: 'C', color: '#dc2626', description: '심각' };
+            return { grade: 'D', color: '#991b1b', description: '부적격' };
+        }
+        
+        // 대출 한도 계산 (최대 10배)
+        function calculateLoanLimit(creditScore, balance) {
+            let baseLimit = 10000; // 기본 한도
+            
+            // 신용점수에 따른 배수 (최대 10배)
+            let multiplier = 1;
+            if (creditScore >= 1100) multiplier = 10;      // SSS: 10배
+            else if (creditScore >= 1000) multiplier = 9;   // SS: 9배
+            else if (creditScore >= 900) multiplier = 8;    // S: 8배
+            else if (creditScore >= 850) multiplier = 7;    // AAA: 7배
+            else if (creditScore >= 800) multiplier = 6;    // AA+: 6배
+            else if (creditScore >= 750) multiplier = 5;    // AA: 5배
+            else if (creditScore >= 700) multiplier = 4;    // A+: 4배
+            else if (creditScore >= 650) multiplier = 3.5;  // A: 3.5배
+            else if (creditScore >= 600) multiplier = 3;    // BBB: 3배
+            else if (creditScore >= 550) multiplier = 2.5;  // BB: 2.5배
+            else if (creditScore >= 500) multiplier = 2;    // B: 2배
+            else if (creditScore >= 450) multiplier = 1.5;  // CCC: 1.5배
+            
+            // 현재 잔액의 일정 비율도 고려 (신용등급에 따라 차등)
+            let balanceMultiplier = 2; // 기본 2배
+            if (creditScore >= 900) balanceMultiplier = 5;      // S급 이상: 잔액의 5배
+            else if (creditScore >= 750) balanceMultiplier = 4; // AA급: 잔액의 4배
+            else if (creditScore >= 650) balanceMultiplier = 3; // A급: 잔액의 3배
+            
+            const balanceLimit = balance * balanceMultiplier;
+            
+            // 기본한도 × 배수와 잔액 기반 한도 중 큰 값 선택
+            const calculatedLimit = Math.max(baseLimit * multiplier, balanceLimit);
+            
+            // 신용등급별 최대 한도 설정
+            let maxLimit = 100000; // 기본 최대 10만
+            if (creditScore >= 1100) maxLimit = 1000000;    // SSS: 100만
+            else if (creditScore >= 1000) maxLimit = 500000; // SS: 50만
+            else if (creditScore >= 900) maxLimit = 300000;  // S: 30만
+            else if (creditScore >= 800) maxLimit = 200000;  // AA+: 20만
+            else if (creditScore >= 700) maxLimit = 150000;  // A+: 15만
+            
+            return Math.min(calculatedLimit, maxLimit);
+        }
+        
+        // 금리 계산 (신용등급별 차등 - 최대 7% 차이)
+        function calculateInterestRate(creditScore, baseRate) {
+            let adjustment = 0;
+            
+            // 더 세밀한 조정 (최대 ±3.5%)
+            if (creditScore >= 1100) adjustment = -3.5;      // SSS: -3.5%
+            else if (creditScore >= 1000) adjustment = -3.0;  // SS: -3.0%
+            else if (creditScore >= 900) adjustment = -2.5;   // S: -2.5%
+            else if (creditScore >= 850) adjustment = -2.0;   // AAA: -2.0%
+            else if (creditScore >= 800) adjustment = -1.5;   // AA+: -1.5%
+            else if (creditScore >= 750) adjustment = -1.2;   // AA: -1.2%
+            else if (creditScore >= 700) adjustment = -0.8;   // A+: -0.8%
+            else if (creditScore >= 650) adjustment = -0.5;   // A: -0.5%
+            else if (creditScore >= 600) adjustment = 0;      // BBB: 기준금리
+            else if (creditScore >= 550) adjustment = 0.5;    // BB: +0.5%
+            else if (creditScore >= 500) adjustment = 1.0;    // B: +1.0%
+            else if (creditScore >= 450) adjustment = 1.5;    // CCC: +1.5%
+            else if (creditScore >= 400) adjustment = 2.5;    // CC: +2.5%
+            else if (creditScore >= 350) adjustment = 3.0;    // C: +3.0%
+            else adjustment = 3.5;                            // D: +3.5%
+            
+            // 최소 0.1%, 최대 30%
+            return Math.max(0.1, Math.min(30, baseRate + adjustment));
+        }
+        
+        // Supabase 설정
+        function setupSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (!url || !key) {
+                showNotification('Supabase URL과 Key를 입력해주세요', 'error');
+                return;
+            }
+            
+            // Supabase 클라이언트 초기화
+            const { createClient } = supabase;
+            supabaseClient = createClient(url, key);
+            
+            // 로컬스토리지에 저장
+            localStorage.setItem('supabaseUrl', url);
+            localStorage.setItem('supabaseKey', key);
+            
+            showNotification('Supabase 연결 성공!', 'success');
+            
+            // 로그인 화면으로 이동
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+        
+        // 데모 모드
+        function playDemo() {
+            gameState.isDemo = true;
+            showNotification('데모 모드로 플레이합니다', 'info');
+            
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+        
+        // 페이지 로드 시 체크
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
+            
+            if (savedUrl && savedKey) {
+                const { createClient } = supabase;
+                supabaseClient = createClient(savedUrl, savedKey);
+                
+                document.getElementById('setupScreen').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'flex';
+            }
+        };
+        
+        // 로그인
+        async function login() {
+            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !email.includes('@')) {
+                showNotification('올바른 이메일을 입력해주세요', 'error');
+                return;
+            }
+            
+            if (!username || username.length < 3) {
+                showNotification('사용자명은 3자 이상이어야 합니다', 'error');
+                return;
+            }
+            
+            if (!password || password.length < 6) {
+                showNotification('비밀번호는 6자 이상이어야 합니다', 'error');
+                return;
+            }
+            
+            const hashedPassword = await hashPassword(password);
+            const encryptedEmail = encryptEmail(email);
+            
+            if (gameState.isDemo) {
+                // 데모 모드
+                gameState.currentUser = {
+                    id: 'demo_' + Date.now(),
+                    username: username,
+                    email: encryptedEmail,
+                    game_balance: 1000,
+                    role: null
+                };
+                showRoleSelection();
+            } else {
+                // 간단한 로그인 (인증 우회)
+                try {
+                    showNotification('로그인 중...', 'info');
+                    
+                    // 먼저 유저가 있는지 확인
+                    let { data: existingUser, error: checkError } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('username', username)
+                        .single();
+                    
+                    if (checkError && checkError.code === 'PGRST116') {
+                        // 유저가 없으면 생성
+                        showNotification('새 계정 생성 중...', 'info');
+                        
+                        // id를 지정하지 않으면 Supabase가 자동으로 UUID 생성
+                        const { data: newUser, error: insertError } = await supabaseClient
+                            .from('users')
+                            .insert({
+                                // id 제거 - 자동 생성되도록
+                                username: username,
+                                email: encryptedEmail,
+                                password_hash: hashedPassword,
+                                game_balance: 1000
+                            })
+                            .select()
+                            .single();
+                        
+                        if (insertError) {
+                            showNotification('계정 생성 실패: ' + insertError.message, 'error');
+                            console.error('Insert error:', insertError);
+                            return;
+                        }
+                        
+                        gameState.currentUser = newUser;
+                        showNotification('계정이 생성되었습니다!', 'success');
+                    } else if (existingUser) {
+                        // 유저가 있으면 비밀번호 확인
+                        if (existingUser.password_hash !== hashedPassword) {
+                            showNotification('비밀번호가 틀렸습니다', 'error');
+                            return;
+                        }
+                        
+                        gameState.currentUser = existingUser;
+                        showNotification('로그인 성공!', 'success');
+                    } else {
+                        showNotification('로그인 중 오류가 발생했습니다', 'error');
+                        return;
+                    }
+                    
+                    // 역할 확인
+                    if (!gameState.currentUser.role) {
+                        showNotification('역할을 선택해주세요', 'info');
+                        showRoleSelection();
+                    } else {
+                        showNotification(`환영합니다, ${username}님!`, 'success');
+                        showGame();
+                    }
+                    
+                } catch (err) {
+                    // 네트워크 오류 시 데모 모드로 전환
+                    showNotification('서버 연결 실패. 데모 모드로 전환합니다.', 'warning');
+                    console.error('Login error:', err);
+                    
+                    gameState.isDemo = true;
+                    gameState.currentUser = {
+                        id: 'demo_' + Date.now(),
+                        username: username,
+                        email: encryptedEmail,
+                        game_balance: 1000,
+                        role: null
+                    };
+                    showRoleSelection();
+                }
+            }
+        }
+        
+        // 로그인 도움말
+        function showLoginHelp() {
+            showNotification('이메일과 닉네임, 비밀번호를 입력하면 자동으로 계정이 생성됩니다!', 'info');
+        }
+        
+        // 게스트 로그인
+        function loginAsGuest() {
+            gameState.isDemo = true;
+            gameState.currentUser = {
+                id: 'guest_' + Date.now(),
+                username: 'Guest_' + Math.floor(Math.random() * 10000),
+                email: 'guest@demo.com',
+                game_balance: 500,
+                role: null
+            };
+            
+            showRoleSelection();
+        }
+        
+        // 역할 선택 화면 표시
+        function showRoleSelection() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('roleSelection').style.display = 'block';
+            
+            // 은행장 역할 체크 (Supabase 연결 시)
+            if (!gameState.isDemo && supabaseClient) {
+                checkBankerRole();
+            }
+        }
+        
+        // 은행장 역할 체크
+        async function checkBankerRole() {
+            const { data } = await supabaseClient
+                .from('users')
+                .select('id')
+                .eq('role', 'banker')
+                .limit(1);
+            
+            if (data && data.length > 0) {
+                document.getElementById('role-banker').style.opacity = '0.5';
+                document.getElementById('role-banker').style.pointerEvents = 'none';
+            }
+        }
+        
+        // 역할 선택
+        function selectRole(role) {
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            document.getElementById(`role-${role}`).classList.add('selected');
+            gameState.selectedRole = role;
+        }
+        
+        // 역할 확정
+        async function confirmRole() {
+            if (!gameState.selectedRole) {
+                showNotification('역할을 선택해주세요', 'error');
+                return;
+            }
+            
+            gameState.currentUser.role = gameState.selectedRole;
+            
+            // 역할 보너스
+            switch (gameState.selectedRole) {
+                case 'banker':
+                    gameState.currentUser.game_balance += 10000;
+                    break;
+                case 'entrepreneur':
+                    gameState.currentUser.game_balance += 5000;
+                    break;
+                case 'investor':
+                    gameState.currentUser.game_balance += 7000;
+                    break;
+                case 'worker':
+                    gameState.currentUser.game_balance += 2000;
+                    break;
+            }
+            
+            // Supabase에 역할 업데이트
+            if (!gameState.isDemo && supabaseClient) {
+                await supabaseClient
+                    .from('users')
+                    .update({ 
+                        role: gameState.selectedRole,
+                        game_balance: gameState.currentUser.game_balance
+                    })
+                    .eq('id', gameState.currentUser.id);
+            }
+            
+            showGame();
+        }
+        
+        //
