@@ -598,9 +598,9 @@
                 <p>Supabase를 연동하여 멀티플레이어로 즐기세요!</p>
             </div>
             
-            <button class="btn" onclick="playDemo()" style="margin-bottom: 10px;">🎯 데모 모드로 시작</button>
+            <button class="btn" id="playDemoBtn" style="margin-bottom: 10px;">🎯 데모 모드로 시작</button>
             
-            <button class="btn btn-secondary" onclick="showSupabaseSetup()" style="
+            <button class="btn btn-secondary" id="supabaseSetupBtn" style="
                 background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
                 color: white !important;
                 border: none !important;
@@ -626,7 +626,7 @@
                 </div>
                 
                 <div style="text-align: center; margin-top: 15px;">
-                    <button class="btn" onclick="setupSupabase()" style="
+                    <button class="btn" id="setupSupabaseBtn" style="
                         background: var(--success) !important;
                         color: white !important;
                         padding: 12px 24px !important;
@@ -634,7 +634,7 @@
                         margin-right: 10px;
                     ">✅ 연동 완료</button>
                     
-                    <button class="btn btn-secondary" onclick="document.getElementById('supabaseSetup').style.display='none'" style="
+                    <button class="btn btn-secondary" id="cancelSupabaseBtn" style="
                         background: rgba(107, 114, 128, 0.8) !important;
                         color: white !important;
                         padding: 12px 24px !important;
@@ -673,9 +673,9 @@
                 <input type="password" class="form-input" id="password" placeholder="비밀번호 (최소 6자)">
             </div>
             
-            <button class="btn" onclick="login()">로그인 / 회원가입</button>
-            <button class="btn btn-secondary" onclick="showLoginHelp()">처음이신가요?</button>
-            <button class="btn btn-secondary" onclick="loginAsGuest()">게스트로 플레이</button>
+            <button class="btn" id="loginBtn">로그인 / 회원가입</button>
+            <button class="btn btn-secondary" id="loginHelpBtn">처음이신가요?</button>
+            <button class="btn btn-secondary" id="loginAsGuestBtn">게스트로 플레이</button>
         </div>
     </div>
     
@@ -2085,6 +2085,67 @@
             document.getElementById('roleSelection').style.display = 'block';
         }
 
+        function setupEventListeners() {
+            // 첫 화면 버튼들
+            document.getElementById('playDemoBtn')?.addEventListener('click', playDemo);
+            document.getElementById('supabaseSetupBtn')?.addEventListener('click', function() {
+                console.log('Supabase 연동하기 버튼 클릭됨');
+                showSupabaseSetup();
+            });
+            
+            // Supabase 설정 버튼들
+            document.getElementById('setupSupabaseBtn')?.addEventListener('click', setupSupabase);
+            document.getElementById('cancelSupabaseBtn')?.addEventListener('click', function() {
+                document.getElementById('supabaseSetup').style.display = 'none';
+            });
+            
+            // 로그인 화면 버튼들
+            document.getElementById('loginBtn')?.addEventListener('click', login);
+            document.getElementById('loginHelpBtn')?.addEventListener('click', showLoginHelp);
+            document.getElementById('loginAsGuestBtn')?.addEventListener('click', loginAsGuest);
+            
+            console.log('모든 이벤트 리스너가 설정되었습니다');
+        }
+
+        function showLoginHelp() {
+            showNotification('이메일과 닉네임, 비밀번호를 입력하면 자동으로 계정이 생성됩니다!', 'info');
+        }
+
+        function login() {
+            const email = document.getElementById('email').value || 'demo@demo.com';
+            const username = document.getElementById('username').value || 'Player' + Math.floor(Math.random() * 1000);
+            
+            if (username.length < 3) {
+                showNotification('사용자명은 3자 이상이어야 합니다', 'error');
+                return;
+            }
+            
+            gameState.currentUser = {
+                id: 'demo_' + Date.now(),
+                username: username,
+                email: email,
+                game_balance: 1000,
+                role: null
+            };
+            
+            updateUserDisplay();
+            showRoleSelection();
+        }
+
+        function loginAsGuest() {
+            gameState.isDemo = true;
+            gameState.currentUser = {
+                id: 'guest_' + Date.now(),
+                username: 'Guest_' + Math.floor(Math.random() * 10000),
+                email: 'guest@demo.com',
+                game_balance: 500,
+                role: null
+            };
+            
+            updateUserDisplay();
+            showRoleSelection();
+        }
+
         let gameState = {
             currentUser: null,
             selectedRole: null,
@@ -2412,47 +2473,7 @@
             }
         };
         
-        // 기타 함수들
-        
-        function login() {
-            const email = document.getElementById('email').value || 'demo@demo.com';
-            const username = document.getElementById('username').value || 'Player' + Math.floor(Math.random() * 1000);
-            const password = document.getElementById('password').value || 'demo123';
-            
-            if (!username || username.length < 3) {
-                showNotification('사용자명은 3자 이상이어야 합니다', 'error');
-                return;
-            }
-            
-            gameState.currentUser = {
-                id: 'demo_' + Date.now(),
-                username: username,
-                email: email,
-                game_balance: 1000,
-                role: null
-            };
-            
-            updateUserDisplay(); // 사용자 정보 표시
-            showRoleSelection();
-        }
-        
-        function loginAsGuest() {
-            gameState.isDemo = true;
-            gameState.currentUser = {
-                id: 'guest_' + Date.now(),
-                username: 'Guest_' + Math.floor(Math.random() * 10000),
-                email: 'guest@demo.com',
-                game_balance: 500,
-                role: null
-            };
-            
-            updateUserDisplay(); // 사용자 정보 표시
-            showRoleSelection();
-        }
-        
-        function showLoginHelp() {
-            showNotification('이메일과 닉네임, 비밀번호를 입력하면 자동으로 계정이 생성됩니다!', 'info');
-        }
+        // 기타 함수들 (중복 제거됨)
         
         function showRoleSelection() {
             document.getElementById('loginScreen').style.display = 'none';
@@ -12159,6 +12180,9 @@ ${contractName}
 
         // 페이지 로드 시 체크
         window.onload = function() {
+            // 이벤트 리스너 추가
+            setupEventListeners();
+            
             // 저장된 게임 데이터 로드 시도
             loadGameState();
             
