@@ -598,24 +598,54 @@
                 <p>Supabase를 연동하여 멀티플레이어로 즐기세요!</p>
             </div>
             
-            <button class="btn" onclick="playDemo()">🎯 데모 모드로 시작</button>
+            <button class="btn" onclick="playDemo()" style="margin-bottom: 10px;">🎯 데모 모드로 시작</button>
             
-            <button class="btn btn-secondary" onclick="showSupabaseSetup()">🔗 Supabase 연동하기</button>
+            <button class="btn btn-secondary" onclick="showSupabaseSetup()" style="
+                background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+                color: white !important;
+                border: none !important;
+                padding: 12px 24px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                margin-bottom: 15px;
+            ">🔗 Supabase 연동하기</button>
             
-            <div id="supabaseSetup" style="display: none; margin-top: 20px;">
+            <div id="supabaseSetup" style="display: none; margin-top: 20px; padding: 20px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px;">
+                <h3 style="color: var(--primary); margin-bottom: 15px; text-align: center;">🔗 Supabase 연동 설정</h3>
+                
                 <div class="form-group">
                     <label class="form-label">Supabase URL</label>
                     <input type="text" class="form-input" id="supabaseUrl" 
-                           placeholder="https://xxxxx.supabase.co">
+                           placeholder="https://xxxxx.supabase.co" style="margin-bottom: 10px;">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Supabase Anon Key</label>
                     <input type="text" class="form-input" id="supabaseKey" 
-                           placeholder="eyJhbGc...">
+                           placeholder="eyJhbGc..." style="margin-bottom: 15px;">
                 </div>
                 
-                <button class="btn" onclick="setupSupabase()">연동 완료</button>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="btn" onclick="setupSupabase()" style="
+                        background: var(--success) !important;
+                        color: white !important;
+                        padding: 12px 24px !important;
+                        font-weight: 600 !important;
+                        margin-right: 10px;
+                    ">✅ 연동 완료</button>
+                    
+                    <button class="btn btn-secondary" onclick="document.getElementById('supabaseSetup').style.display='none'" style="
+                        background: rgba(107, 114, 128, 0.8) !important;
+                        color: white !important;
+                        padding: 12px 24px !important;
+                    ">❌ 취소</button>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 10px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">
+                    <p style="color: #f59e0b; margin: 0; font-size: 0.8rem; text-align: center;">
+                        💡 Supabase 프로젝트를 생성하고 위의 정보를 입력하세요
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -1995,6 +2025,66 @@
     <script>
         // 변수 선언
         let supabaseClient = null;
+        
+        // 먼저 필요한 함수들을 정의
+        function playDemo() {
+            gameState.isDemo = true;
+            showNotification('데모 모드로 플레이합니다', 'info');
+            showRoleSelection();
+        }
+
+        function showSupabaseSetup() {
+            console.log('showSupabaseSetup 함수 실행됨');
+            const supabaseSetupDiv = document.getElementById('supabaseSetup');
+            if (supabaseSetupDiv) {
+                supabaseSetupDiv.style.display = 'block';
+                console.log('supabaseSetup div 표시됨');
+            } else {
+                console.error('supabaseSetup div를 찾을 수 없음');
+            }
+        }
+
+        function setupSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (!url || !key) {
+                showNotification('Supabase URL과 Key를 입력해주세요', 'error');
+                return;
+            }
+            
+            try {
+                const { createClient } = supabase;
+                supabaseClient = createClient(url, key);
+                
+                localStorage.setItem('supabaseUrl', url);
+                localStorage.setItem('supabaseKey', key);
+                
+                showNotification('Supabase 연결 성공!', 'success');
+                document.getElementById('setupScreen').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'flex';
+            } catch (error) {
+                showNotification('Supabase 연결 실패: ' + error.message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function showRoleSelection() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('roleSelection').style.display = 'block';
+        }
+
         let gameState = {
             currentUser: null,
             selectedRole: null,
@@ -2322,43 +2412,7 @@
             }
         };
         
-        // 함수 정의
-        function showSupabaseSetup() {
-            document.getElementById('supabaseSetup').style.display = 'block';
-        }
-        
-        function setupSupabase() {
-            const url = document.getElementById('supabaseUrl').value;
-            const key = document.getElementById('supabaseKey').value;
-            
-            if (!url || !key) {
-                showNotification('Supabase URL과 Key를 입력해주세요', 'error');
-                return;
-            }
-            
-            try {
-                const { createClient } = supabase;
-                supabaseClient = createClient(url, key);
-                
-                localStorage.setItem('supabaseUrl', url);
-                localStorage.setItem('supabaseKey', key);
-                
-                showNotification('Supabase 연결 성공!', 'success');
-                
-                document.getElementById('setupScreen').style.display = 'none';
-                document.getElementById('loginScreen').style.display = 'flex';
-            } catch (error) {
-                showNotification('Supabase 연결 실패: ' + error.message, 'error');
-            }
-        }
-        
-        function playDemo() {
-            gameState.isDemo = true;
-            showNotification('데모 모드로 플레이합니다', 'info');
-            
-            document.getElementById('setupScreen').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-        }
+        // 기타 함수들
         
         function login() {
             const email = document.getElementById('email').value || 'demo@demo.com';
@@ -5170,17 +5224,6 @@
             updateDisplay();
         }
         
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            const notificationText = document.getElementById('notificationText');
-            
-            notificationText.textContent = message;
-            notification.className = `notification ${type} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
         
         // 직업별 초기화 함수들
         function initializeBusinessData() {
